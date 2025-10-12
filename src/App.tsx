@@ -29,7 +29,8 @@ function App() {
   return (
     <div className="flex flex-col min-h-screen bg-slate-900">
       <Navbar />
-      <main className="flex-grow">
+      {/* pt-16 padding for fixed navbar */}
+      <main className="flex-grow pt-16">
         <Routes>
           <Route path="/" element={<Home />} />
 
