@@ -1,9 +1,11 @@
 interface Ilanguages {
     code?: string;
-    name?:string;
+    name?: string;
+    iso_639_1?: string;
+    english_name?: string;
 }
 export const languages:Ilanguages[]= [
-    {"name":"Afrikaans","code":"af"},
+    {"name":"Afrikaans","code":"af","iso_639_1":"af","english_name":"Afrikaans"},
     {"name":"Albanian - shqip","code":"sq"},
     {"name":"Amharic - አማርኛ","code":"am"},
     {"name":"Arabic - العربية","code":"ar"},

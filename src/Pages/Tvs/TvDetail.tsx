@@ -1,181 +1,155 @@
-import axios from "axios";
-import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
-import { useAppDispatch, useAppSelector } from "../../redux/store";
-import TvCredits from "../../components/Tvs/TvCredit";
-import TvRecommendation from "../../components/Tvs/TvRecommendation";
-import { fetchTvDetail } from "../../redux/tvShows/tvShowsDetailSlice";
-import TvLabel from "../../components/Tvs/TvLabel";
-import TvSeasonsBackdrops from "../../components/Tvs/TvSeasonsBackdrops";
-import { languages } from "../../languages-list";
-import { image } from "../../helper";
-import Loading from "../../components/Loading";
+import { Link, useParams } from 'react-router-dom';
+import { useGetTVShowDetailsQuery } from '../../api/endpoints/tv.endpoints';
+import { extractIdFromSlug, getPosterUrl, getBackdropUrl, getYear, formatDuration } from '../../utils';
+import TvCredits from '../../components/Tvs/TvCredit';
+import TvLabel from '../../components/Tvs/TvLabel';
+import TvSeasonsBackdrops from '../../components/Tvs/TvSeasonsBackdrops';
+import { languages } from '../../languages-list';
+import Loading from '../../components/Loading';
 
 function TvDetail() {
   const { id } = useParams();
-  const tv_id = id?.split("-")[0];
-  const name = id?.split("-")[1];
+  const tvId = extractIdFromSlug(id);
 
-  const dispatch = useAppDispatch();
-  const tvDetail = useAppSelector((state) => state.tvDetails.data);
-  const status = useAppSelector((state) => state.tvDetails.loading);
-  const [tvKey, setTvKey] = useState([]);
-  useEffect(() => {
-    dispatch(fetchTvDetail(tv_id!));
-    axios(
-      `https://api.themoviedb.org/3/tv/${tv_id}/keywords?api_key=f23d45e024dfa841dbe4c5648bd1a790&language=tr-TR&include_adult=false`
-    )
-      .then((res) => res.data)
-      .then((data) => setTvKey(data));
-  }, [dispatch, tv_id]);
+  const { data: tvDetail, isLoading, error } = useGetTVShowDetailsQuery(tvId!, {
+    skip: !tvId,
+  });
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+        <p className="text-red-400 text-xl">TV şovu yüklenirken bir hata oluştu.</p>
+      </div>
+    );
+  }
+
+  if (isLoading || !tvDetail) {
+    return <Loading />;
+  }
+
+  const languageName = languages.find(
+    (lang) => lang.iso_639_1 === tvDetail.original_language
+  )?.english_name || tvDetail.original_language.toUpperCase();
 
   return (
     <>
-      {status === "pending" ? (
-        <Loading />
-      ) : (
-        <>
-          <div className="flex px-4 py-8 md:py-6 flex-col md:flex-row text-slate-900 dark:text-slate-100 items-center bg-slate-900">
-            <img
-              loading="lazy"
-              src={`${
-                tvDetail?.poster_path === ""
-                  ? ""
-                  : `${image}${tvDetail?.poster_path}`
-              }`}
-              alt={`${tvDetail?.name === null ? "" : ""}`}
-              className="hidden md:block w-40 h-60 left-2 top-36 md:left-3 lg:w-60 lg:h-96 opacity-100 z-10 absolute mx-4 object-cover object-center rounded-md"
-            />
+      <div className="flex px-4 py-8 md:py-6 flex-col md:flex-row text-slate-900 dark:text-slate-100 items-center bg-slate-900 relative">
+        {/* Poster */}
+        <img
+          loading="lazy"
+          src={getPosterUrl(tvDetail.poster_path)}
+          alt={tvDetail.name}
+          className="hidden md:block w-40 h-60 left-2 top-36 md:left-3 lg:w-60 lg:h-96 opacity-100 z-10 absolute mx-4 object-cover object-center rounded-md shadow-2xl"
+        />
 
-            <figure className="w-full opacity-30">
-              <img
-                loading="lazy"
-                src={`${
-                  tvDetail?.backdrop_path === ""
-                    ? ""
-                    : `${image}${tvDetail?.backdrop_path}`
-                }`}
-                className="w-full h-[460px] object-top object-cover rounded-lg"
-                alt={`${tvDetail?.backdrop_path === null ? "" : ""}`}
-              />
-            </figure>
-            <div className="lg:w-max p-4 space-y-4 absolute left-4   w-4/5 lg:left-72">
-              <h1 className="text-2xl text-zinc-100 font-semibold leading-tight">
-                {tvDetail?.name}
-                <span className="text-3xl font-light">
-                  {" "}
-                  ({tvDetail?.first_air_date.slice(0, 4)})
-                </span>
-              </h1>
-              <p className="hidden md:block w-[700px] text-slate-300">
-                {tvDetail?.overview}
+        {/* Backdrop */}
+        <figure className="w-full opacity-30">
+          <img
+            loading="lazy"
+            src={getBackdropUrl(tvDetail.backdrop_path)}
+            className="w-full h-[460px] object-top object-cover rounded-lg"
+            alt={tvDetail.name}
+          />
+        </figure>
+
+        {/* TV Show Info */}
+        <div className="lg:w-max p-4 space-y-4 absolute left-4 w-4/5 lg:left-72">
+          <h1 className="text-2xl text-zinc-100 font-semibold leading-tight">
+            {tvDetail.name}
+            <span className="text-3xl font-light">
+              {' '}
+              ({getYear(tvDetail.first_air_date)})
+            </span>
+          </h1>
+          <p className="hidden md:block w-[700px] text-slate-300">
+            {tvDetail.overview || 'Açıklama bulunmuyor.'}
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {tvDetail.genres.map((genre) => (
+              <span
+                key={genre.id}
+                className="px-3 py-1 bg-slate-700 rounded-full text-sm text-slate-200"
+              >
+                {genre.name}
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="px-4 space-y-4 bg-slate-900 text-gray-900 dark:text-gray-100">
+        <div className="lg:flex lg:gap-x-8">
+          {/* Main Content */}
+          <article className="w-12/12 lg:w-9/12 dark:border-gray-700">
+            <TvCredits id={id} />
+            
+            <Link to={`/tv/${tvId}/cast`}>
+              <li className="flex flex-col font-semibold text-xl text-left my-6 hover:text-slate-400 text-slate-300 duration-200 list-none">
+                Tüm Oyuncular ve Ekip
+              </li>
+            </Link>
+
+            <TvSeasonsBackdrops />
+          </article>
+
+          {/* Sidebar */}
+          <aside className="bg-slate-900 text-zinc-300 lg:w-3/12 grid grid-cols-1 gap-4">
+            <article className="w-full mt-4 pb-4 border-b border-slate-700">
+              <h3 className="text-slate-300 font-bold mb-2">Orijinal Başlık</h3>
+              <p className="text-slate-400 font-light text-sm">
+                {tvDetail.original_name}
               </p>
-              <p className="text-sm text-slate-200">
-                {tvDetail?.genres.map((genre) => (
-                  <span key={genre.id}>{genre.name} </span>
+            </article>
+
+            <article className="w-full pb-4 border-b border-slate-700">
+              <h3 className="text-slate-300 font-bold mb-2">Durum</h3>
+              <p className="text-slate-400 font-light text-sm">
+                {tvDetail.status}
+              </p>
+            </article>
+
+            <article className="w-full pb-4 border-b border-slate-700">
+              <h3 className="text-slate-300 font-bold mb-2">Ağ</h3>
+              <div className="flex flex-wrap gap-2">
+                {tvDetail.networks.map((network) => (
+                  <Link
+                    key={network.id}
+                    to={`/network/${network.id}-${network.name.toLowerCase().replace(/\s+/g, '-')}`}
+                    className="text-slate-400 hover:text-slate-200 font-light text-sm"
+                  >
+                    {network.name}
+                  </Link>
                 ))}
+              </div>
+            </article>
+
+            <article className="w-full pb-4 border-b border-slate-700">
+              <h3 className="text-slate-300 font-bold mb-2">Orijinal Dili</h3>
+              <p className="text-slate-400 font-light text-sm">
+                {languageName}
               </p>
-            </div>
-          </div>
+            </article>
 
-          <div className="px-4 space-y-4 bg-slate-900 text-gray-900 dark:text-gray-100 ">
-            <div className="lg:flex lg:gap-x-8">
-              <article className="w-12/12 md:w-9/12 dark:border-gray-700">
-                <TvCredits id={id} />
+            <article className="w-full pb-4 border-b border-slate-700">
+              <h3 className="text-slate-300 font-bold mb-2">Sezon Sayısı</h3>
+              <p className="text-slate-400 font-light text-sm">
+                {tvDetail.number_of_seasons}
+              </p>
+            </article>
 
-                <Link to={`/tv/${id}/cast`}>
-                  <li className="flex flex-col font-semibold text-1xl text-left my-6 hover:text-slate-400 text-slate-300 duration-200 ">
-                    Tüm Oyuncular ve Ekip
-                  </li>
-                </Link>
-                {tvDetail?.seasons !== null ? (
-                  <>
-                    <hr />
-                    <TvSeasonsBackdrops
-                      title={tvDetail?.name}
-                      tv_id={id}
-                      season_number={tvDetail?.last_episode_to_air?.season_number.toString()}
-                    />
-                  </>
-                ) : (
-                  <></>
-                )}
+            <article className="w-full pb-4 border-b border-slate-700">
+              <h3 className="text-slate-300 font-bold mb-2">Bölüm Sayısı</h3>
+              <p className="text-slate-400 font-light text-sm">
+                {tvDetail.number_of_episodes}
+              </p>
+            </article>
 
-                <TvRecommendation id={id} name={tvDetail?.name} />
-              </article>
-
-              <aside className="bg-slate-900 text-zinc-300 lg:w-3/12 divider grid gap-1">
-                <article className="w-full mt-4 grid grid-cols-1 pb-4">
-                  <figure className="space-y-1">
-                    <h3 className="text-slate-300 dark:text-slate-400 font-bold">
-                      Film Detayları
-                    </h3>
-                  </figure>
-                </article>
-                <article className="w-full  grid grid-cols-1 pb-4">
-                  <figure className="space-y-1">
-                    <h3 className="text-slate-300 dark:text-slate-400 font-bold">
-                      Durum
-                    </h3>
-                    <p className="text-slate-300 dark:text-slate-400 font-light text-sm w-60">
-                      {tvDetail?.status === "Returning Series"
-                        ? "Yeni Sezonu Olan Diziler"
-                        : "Devam Ediyor"}
-                    </p>
-                  </figure>
-                </article>
-                <article className="w-full space-y-2 grid grid-cols-1 pb-4">
-                  <h3 className="text-slate-300 dark:text-slate-400 font-bold">
-                    {tvDetail?.networks.length !== 0 &&
-                    tvDetail?.networks.length !== 1
-                      ? "Ağlar"
-                      : "Ağ"}
-                  </h3>
-                  {tvDetail?.networks.map((network) => (
-                    <figure key={network.id} className="space-y-2">
-                      <Link key={network.id} to={`/network/${network.id}`}>
-                        <img
-                          loading="lazy"
-                          className="h-7  rounded-md"
-                          src={`${image}${network.logo_path}`}
-                          alt={`${network.name}`}
-                        />
-                      </Link>
-                    </figure>
-                  ))}
-                </article>
-                <article className="w-full  grid grid-cols-1 pb-4">
-                  <figure className="space-y-1">
-                    <h3 className="text-slate-300 dark:text-slate-400 font-bold">
-                      Tip
-                    </h3>
-                    <p className="text-slate-300 dark:text-slate-400 font-light text-sm">
-                      {tvDetail?.type}
-                    </p>
-                  </figure>
-                </article>
-                <article className="w-full  grid grid-cols-1 pb-4">
-                  <figure className="space-y-1">
-                    <h3 className="text-slate-300 dark:text-slate-400 font-bold">
-                      Orjinal Dili
-                    </h3>
-                    <p className="text-slate-300 dark:text-slate-400 font-light text-sm">
-                      {languages
-                        .filter(
-                          (lang) => lang.code === tvDetail?.original_language
-                        )
-                        .map((lang) => lang.name)}
-                    </p>
-                  </figure>
-                </article>
-                <article className="w-full mt-4 grid grid-cols-1 pb-4">
-                  <TvLabel />
-                </article>
-              </aside>
-            </div>
-          </div>
-        </>
-      )}
+            <article className="w-full mt-4">
+              <TvLabel />
+            </article>
+          </aside>
+        </div>
+      </div>
     </>
   );
 }
