@@ -1,87 +1,69 @@
-import axios from "axios";
-import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { air_date, image } from "../../helper";
-import { Movies } from "../../types/Movies";
-import { Tvs } from "../../types/tvs";
+import { useState } from 'react';
+import { FireIcon } from '@heroicons/react/24/solid';
+import { useGetTrendingQuery } from '../../api/endpoints/movies.endpoints';
+import MovieCarousel from '../Carousel/MovieCarousel';
+import '../Carousel/carousel.css';
+
+type TimeWindow = 'day' | 'week';
+
+const timeOptions = [
+  { id: 0, label: 'Bugün', value: 'day' as TimeWindow },
+  { id: 1, label: 'Bu Hafta', value: 'week' as TimeWindow },
+];
 
 function Trending() {
-  const [type, setType] = useState("day");
-  const [trend, setTrending] = useState<Movies>();
+  const [timeWindow, setTimeWindow] = useState<TimeWindow>('day');
   const [activeIndex, setActiveIndex] = useState(0);
-  const [watchType, setWatchType] = useState("")
-  const handleClick = (index: number, type: string) => {
-    setType(type);
+
+  const { data: trending, isLoading } = useGetTrendingQuery(timeWindow);
+
+  const handleClick = (index: number, time: TimeWindow) => {
+    setTimeWindow(time);
     setActiveIndex(index);
   };
-  useEffect(() => {
-    axios(
-      ` https://api.themoviedb.org/3/trending/all/${type}?api_key=f23d45e024dfa841dbe4c5648bd1a790`
-    )
-      .then((res) => res.data)
-      .then((data) => setTrending(data));
-        
-  }, [type]);
-  return (
-    <div>
-      <div className="flex m-5 mt-20">
-        <h3 className="mr-6 text-2xl text-left text-zinc-300 font-semibold">
-          Trending
-        </h3>
-        <div className="flex-col rounded-xl shadow-sm" role="group">
-          <button
-            onClick={() => handleClick(0, "day")}
-            className={`
-        ${activeIndex === 0 ? "bg-cyan-400 transition duration-500 ease-linear" : "bg-white"}
-        px-4 py-2 text-sm font-medium text-gray-900  border border-gray-200 rounded-l-xl  dark:bg-gray-700 dark:border-gray-600 dark:text-white`}
-          >
-            Today
-          </button>
 
-          <button
-            onClick={() => handleClick(1, "week")}
-            className={`
-        ${activeIndex === 1 ? "bg-cyan-400 transition duration-500 ease-linear" : "bg-white"}
-        px-4 py-2 text-sm font-medium text-gray-900  border border-gray-200 rounded-r-xl  dark:bg-gray-700 dark:border-gray-600 dark:text-white`}
-          >
-            This Week
-          </button>
+  return (
+    <section className="relative carousel-orange">
+      {/* Section Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+        <div className="space-y-2">
+          <div className="flex items-center gap-3">
+            <FireIcon className="h-8 w-8 text-orange-400 animate-pulse" />
+            <h2 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-orange-400 to-red-400 bg-clip-text text-transparent">
+              Trendler
+            </h2>
+          </div>
+          <p className="text-slate-400">En çok konuşulan film ve diziler</p>
+        </div>
+
+        {/* Time Tabs */}
+        <div className="flex gap-2 bg-slate-800/50 backdrop-blur-lg border border-slate-700/50 p-1.5 rounded-xl">
+          {timeOptions.map((option) => (
+            <button
+              key={option.id}
+              onClick={() => handleClick(option.id, option.value)}
+              className={`
+                px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300
+                ${activeIndex === option.id
+                  ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-700/50'
+                }
+              `}
+            >
+              {option.label}
+            </button>
+          ))}
         </div>
       </div>
 
-      <div className="m-5">
-        <ul className="flex overflow-scroll overflow-y-hidden">
-          {trend?.results.map((movie) => (
-            <Link
-              key={movie.id}
-              to={`/${movie.media_type}/${movie.id}`}
-            >
-              <li className="flex flex-col w-40 gap-x-5 shadow rounded-lg mb-2">
-                <figure className="flex-col space-y-2">
-                  <img
-                    loading="eager"
-                    className="h-56 w-36 object-cover object-top rounded-md"
-                    src={`${
-                      movie?.poster_path === null
-                        ? "/assets/nullUser.svg"
-                        : `${image}${movie?.poster_path}`
-                    }`}
-                    alt=""
-                  />
-
-                  <p className="mt-2 w-28  text-slate-100  text-md font-l">
-                    {movie?.title || movie?.name}
-                  </p>
-                  <p className="mt-2 w-28  text-slate-700 dark:text-slate-400 text-md font-l">
-                    {air_date(movie?.release_date || movie?.first_air_date)}
-                  </p>
-                </figure>
-              </li>
-            </Link>
-          ))}
-        </ul>
-      </div>
-    </div>
+      {/* Trending Carousel */}
+      <MovieCarousel
+        movies={trending?.results || []}
+        isLoading={isLoading}
+        mediaType="movie"
+        color="orange"
+      />
+    </section>
   );
 }
 

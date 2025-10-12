@@ -1,121 +1,66 @@
-import axios from "axios";
-import React, { useEffect, useState } from "react";
-import { Link, NavLink } from "react-router-dom";
-import { air_date, image } from "../../helper";
+import { useState } from 'react';
+import { useDiscoverMoviesQuery } from '../../api/endpoints/movies.endpoints';
+import MovieCarousel from '../Carousel/MovieCarousel';
+import '../Carousel/carousel.css';
 
-import { Movies } from "../../types/Movies";
+type WatchType = 'with_watch_monetization_types=flatrate' | 'with_watch_monetization_types=rent' | 'with_watch_monetization_type=3|2';
+
+const categories = [
+  { id: 0, label: 'Streaming', value: 'with_watch_monetization_types=flatrate' as WatchType },
+  { id: 2, label: 'Kiralık', value: 'with_watch_monetization_types=rent' as WatchType },
+  { id: 3, label: 'Sinemada', value: 'with_watch_monetization_type=3|2' as WatchType },
+];
 
 function Popular() {
-  const [type, setType] = useState("with_watch_monetization_types=flatrate");
-  const [popular, setPopular] = useState<Movies>();
+  const [watchType, setWatchType] = useState<WatchType>('with_watch_monetization_types=flatrate');
   const [activeIndex, setActiveIndex] = useState(0);
-  const [loading, setLoading] = useState<boolean>(true);
-  const handleClick = (index: number, type: string) => {
-    setType(type);
+
+  const { data: popular, isLoading } = useDiscoverMoviesQuery({ watchType });
+
+  const handleClick = (index: number, type: WatchType) => {
+    setWatchType(type);
     setActiveIndex(index);
   };
-  useEffect(() => {
-    axios(
-      `https://api.themoviedb.org/3/discover/movie?api_key=f23d45e024dfa841dbe4c5648bd1a790&watch_region=US&${type}
-      `
-    )
-      .then((res) => res.data)
-      .then((data) => setPopular(data))
-      .catch((err) => console.log(err))
-      .finally(() => setLoading(false));
-  }, [type]);
 
   return (
-    <div>
-      <div className="flex m-5 ">
-        <h3 className="mr-3 lg:mr-6 lg:text-2xl text-sm md:text-1xl text-left text-zinc-300 font-semibold w-14 lg:w-max">
-          What's Popular
-        </h3>
-        <div
-          className="flex-col lg:text-2xl rounded-xl shadow-sm "
-          role="group"
-        >
-          <button
-            onClick={() =>
-              handleClick(0, "with_watch_monetization_types=flatrate")
-            }
-            className={`
-            ${
-              activeIndex === 0
-                ? "bg-cyan-400 transition duration-500 ease-linear"
-                : "bg-white"
-            }
-            p-2 md:px-4 md:py-2 text-xs lg:text-sm font-medium  text-gray-900  border border-gray-200 rounded-l-xl dark:bg-gray-700 dark:border-gray-600 dark:text-white`}
-          >
-            Streaming
-          </button>
-          <button
-            onClick={() => handleClick(2, "with_watch_monetization_types=rent")}
-            className={`
-            ${
-              activeIndex === 2
-                ? "bg-cyan-400 transition duration-500 ease-linear"
-                : "bg-white"
-            }
-            p-2 md:px-4 md:py-2 text-xs lg:text-sm font-medium  text-gray-900  border border-gray-200  dark:bg-gray-700 dark:border-gray-600 dark:text-white`}
-          >
-            For Rent
-          </button>
-          <button
-            onClick={() => handleClick(3, "with_watch_monetization_type=3|2")}
-            className={`
-            ${
-              activeIndex === 3
-                ? "bg-cyan-400 transition duration-500 ease-linear"
-                : "bg-white"
-            }
-            p-2 md:px-4 md:py-2 text-xs lg:text-sm font-medium  text-gray-900  border border-gray-200 rounded-r-xl dark:bg-gray-700 dark:border-gray-600 dark:text-white`}
-          >
-            In Theaters
-          </button>
+    <section className="relative">
+      {/* Section Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+        <div className="space-y-2">
+          <h2 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-white to-cyan-200 bg-clip-text text-transparent">
+            Popüler Filmler
+          </h2>
+          <p className="text-slate-400">En çok izlenen ve beğenilen filmler</p>
+        </div>
+
+        {/* Category Tabs */}
+        <div className="flex gap-2 bg-slate-800/50 backdrop-blur-lg border border-slate-700/50 p-1.5 rounded-xl">
+          {categories.map((category) => (
+            <button
+              key={category.id}
+              onClick={() => handleClick(category.id, category.value)}
+              className={`
+                px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300
+                ${activeIndex === category.id
+                  ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-lg'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-700/50'
+                }
+              `}
+            >
+              {category.label}
+            </button>
+          ))}
         </div>
       </div>
 
-      <div className="m-5">
-        <ul className="flex overflow-scroll overflow-y-hidden">
-          {popular?.results.map((movie) => (
-            <Link            
-              key={movie.id}
-              to={`/movie/${movie.id}-${movie.original_title
-                .toLocaleLowerCase()
-                .replaceAll(".", "-")
-                .replaceAll(",", "-")
-                .replaceAll(" ", "-")
-                .replaceAll("--", "-")
-                .replace(":", "")
-                .split(",", 1)}`}
-            >
-              <li className="flex flex-col w-40 gap-x-5 shadow rounded-lg mb-2">
-                <figure className="flex-col space-y-2">
-                  <img
-                    loading="eager"
-                    className="h-56 w-36 object-cover object-top rounded-md"
-                    src={`${
-                      movie?.poster_path === null
-                        ? "/assets/nullUser.svg"
-                        : `${image}${movie?.poster_path}`
-                    }`}
-                    alt=""
-                  />
-
-                  <p className="mt-2 w-28  text-gray-100 text-md font-l">
-                    {movie?.title}
-                  </p>
-                  <p className="mt-2 w-28  text-slate-700 dark:text-slate-400 text-md font-l">
-                    {air_date(movie?.release_date)}
-                  </p>
-                </figure>
-              </li>
-            </Link>
-          ))}
-        </ul>
-      </div>
-    </div>
+      {/* Movies Carousel */}
+      <MovieCarousel
+        movies={popular?.results || []}
+        isLoading={isLoading}
+        mediaType="movie"
+        color="cyan"
+      />
+    </section>
   );
 }
 

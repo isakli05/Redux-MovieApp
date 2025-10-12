@@ -1,68 +1,118 @@
-import axios from "axios";
-import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { image } from "../../helper";
-import { fetchMovieCredits } from "../../redux/movies/movieCreditsSlice";
-import { useAppDispatch, useAppSelector } from "../../redux/store";
-import { MovieCredits } from "../../types/movieCredits";
+import { Link } from 'react-router-dom';
+import { UserGroupIcon, ArrowRightIcon } from '@heroicons/react/24/outline';
+import { useGetMovieCreditsQuery } from '../../api/endpoints/movies.endpoints';
+import { getProfileUrl, extractIdFromSlug } from '../../utils';
 
-type MovieCreditsProps = {
+type MovieCreditProps = {
   id?: string;
 };
 
-function MovieCredit({ id }: MovieCreditsProps) {
-  const dispatch = useAppDispatch();
-  const movieCredits = useAppSelector((state) => state.movieCredits.data);
-  
-  useEffect(() => {
-    dispatch(fetchMovieCredits(id!));
-  }, []);
- 
- 
-  
+function MovieCredit({ id }: MovieCreditProps) {
+  const movieId = extractIdFromSlug(id);
+  const { data: movieCredits, isLoading } = useGetMovieCreditsQuery(movieId!, {
+    skip: !movieId,
+  });
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center gap-3">
+          <div className="w-1 h-8 bg-gradient-to-b from-cyan-400 to-blue-500 rounded-full" />
+          <h2 className="text-2xl md:text-3xl font-bold text-white">
+            Başrol Oyuncuları
+          </h2>
+        </div>
+        <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin">
+          {Array.from({ length: 9 }).map((_, index) => (
+            <div key={index} className="flex-shrink-0 w-40 animate-pulse">
+              <div className="aspect-[2/3] bg-slate-700/50 rounded-xl mb-3 animate-shimmer" />
+              <div className="space-y-2">
+                <div className="h-4 bg-slate-700/50 rounded w-full" />
+                <div className="h-3 bg-slate-700/50 rounded w-3/4" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="bg-slate-900 py-2">      
-        <h3 className="text-3xl text-left text-zinc-300 font-semibold">
+    <div className="space-y-6">
+      <div className="flex items-center gap-3">
+        <div className="w-1 h-8 bg-gradient-to-b from-cyan-400 to-blue-500 rounded-full" />
+        <h2 className="text-2xl md:text-3xl font-bold text-white">
           Başrol Oyuncuları
-        </h3>
-        
-        <ul className="flex mt-3  overflow-scroll overflow-y-hidden">
-          {movieCredits?.cast
-            .map((cast) => (
-              <li key={cast.id} className="flex flex-col w-[140px]  shadow rounded-lg m-2">
-                <Link to={`/person/${cast.id}`}>
-                  <figure className="flex-col space-y-2">
-                    <img
-                      loading="lazy"
-                      className="h-44 w-[140px] rounded-t-lg rounded-tr-lg"
-                      src={`${
-                        cast?.profile_path === null
-                          ? "/assets/nullUser.svg"
-                          : `${image}${cast?.profile_path}`
-                      }`}
-                      alt={`${cast?.name}`}
-                    />
-                    <div className="flex flex-col pl-1 pb-3  ">
-                      <p className="font-semibold text-slate-100">
+        </h2>
+      </div>
+
+      <div className="relative">
+        <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin snap-x snap-mandatory">
+          {movieCredits?.cast.slice(0, 9).map((cast) => (
+            <Link
+              key={cast.id}
+              to={`/person/${cast.id}`}
+              className="group flex-shrink-0 w-40 snap-start"
+            >
+              <div className="relative">
+                {/* Cast Card */}
+                <div className="relative aspect-[2/3] rounded-xl overflow-hidden shadow-xl group-hover:shadow-2xl group-hover:shadow-cyan-500/20 transition-all duration-300 mb-3">
+                  {/* Hover Overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-100 z-10">
+                    <div className="absolute bottom-0 left-0 right-0 p-3 space-y-1">
+                      <p className="text-white font-semibold text-sm line-clamp-2 leading-tight">
                         {cast.original_name}
                       </p>
-                      <span className="text-sm w-[140px] font-light dark:text-slate-400 text-slate-500">
+                      <p className="text-cyan-400 text-xs line-clamp-1">
                         {cast.character}
-                      </span>
+                      </p>
                     </div>
-                  </figure>
-              </Link>
-                </li>
-            ))
-            .slice(0, 9)}
-          <Link to={`/movie/${id}/cast`}>
-            <li className="flex flex-col text-center h-44 items-center justify-center hover:text-slate-400 duration-200 text-slate-200">
-              Tümünü Gör<i className="fa-solid fa-arrow-right"></i>
-            </li>
+                  </div>
+
+                  {/* Profile Image */}
+                  <img
+                    loading="lazy"
+                    src={getProfileUrl(cast.profile_path)}
+                    alt={cast.name}
+                    className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"
+                  />
+                </div>
+
+                {/* Name & Character (Desktop) */}
+                <div className="space-y-1">
+                  <p className="text-white font-semibold text-sm line-clamp-2 leading-tight group-hover:text-cyan-400 transition-colors">
+                    {cast.original_name}
+                  </p>
+                  <p className="text-slate-400 text-xs line-clamp-1">
+                    {cast.character}
+                  </p>
+                </div>
+              </div>
+            </Link>
+          ))}
+
+          {/* View All Card */}
+          <Link
+            to={`/movie/${movieId}/cast`}
+            className="group flex-shrink-0 w-40 snap-start"
+          >
+            <div className="aspect-[2/3] rounded-xl bg-slate-800/50 backdrop-blur-lg border-2 border-dashed border-slate-700/50 hover:border-cyan-500/50 transition-all duration-300 flex flex-col items-center justify-center gap-3 mb-3">
+              <div className="w-12 h-12 rounded-full bg-slate-700/50 flex items-center justify-center group-hover:bg-cyan-500/20 transition-colors">
+                <UserGroupIcon className="h-6 w-6 text-slate-400 group-hover:text-cyan-400 transition-colors" />
+              </div>
+              <div className="text-center space-y-1">
+                <p className="text-white font-semibold text-sm">Tümünü Gör</p>
+                <ArrowRightIcon className="h-4 w-4 text-slate-400 group-hover:text-cyan-400 mx-auto group-hover:translate-x-1 transition-all" />
+              </div>
+            </div>
           </Link>
-        </ul>
-        
+        </div>
+
+        {/* Scroll Hint */}
+        <div className="absolute right-0 top-0 bottom-4 w-12 bg-gradient-to-l from-slate-900 to-transparent pointer-events-none" />
+      </div>
     </div>
   );
 }
+
 export default MovieCredit;

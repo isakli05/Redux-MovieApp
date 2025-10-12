@@ -1,66 +1,59 @@
-import axios from "axios";
-import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { image } from "../../helper";
-import { Tvs } from "../../types/tvs";
+import { Link } from 'react-router-dom';
+import { useGetTVShowRecommendationsQuery } from '../../api/endpoints/tv.endpoints';
+import { getPosterUrl, createSlug } from '../../utils';
 
 type TvRecommendationProps = {
   id?: string;
   name?: string;
 };
 
-function TvRecommendation({ id,name }: TvRecommendationProps) {
-  const [tvRecom, setTvRecom] = useState<Tvs>();
+function TvRecommendation({ id, name }: TvRecommendationProps) {
+  const { data: tvRecom, isLoading } = useGetTVShowRecommendationsQuery(id!, {
+    skip: !id,
+  });
 
-  useEffect(() => {
-    axios(
-      `https://api.themoviedb.org/3/tv/${id}/recommendations?api_key=f23d45e024dfa841dbe4c5648bd1a790&language=en-US&page=1`
-    )
-      .then((res) => res.data)
-      .then((data) => setTvRecom(data));
-  }, []);
+  if (isLoading) return null;
 
-  
-  
   return (
-    <div>
-      <h3 className="mt-6 mb-4 text-2xl text-left text-zinc-300 font-semibold">
+    <div className="mt-6">
+      <h3 className="mb-4 text-2xl text-left text-zinc-300 font-semibold">
         Tavsiyeler
-        
       </h3>
-      <ul className="flex  overflow-scroll overflow-y-hidden">
-        {tvRecom?.results.length===0?`We don't have enough data to suggest any TV shows based on ${name}. You can help by rating TV shows you've seen.`: tvRecom?.results.map((tv) => (
-          <Link
-            key={tv.id}
-            to={`/tv/${tv.id}-${tv.original_name
-              .toLocaleLowerCase()
-              .replaceAll(".", "-")
-              .replaceAll(",", "-")
-              .replaceAll(" ", "-")
-              .replaceAll("--", "-")
-              .replace(":", "")
-              .split(",", 1)}`}
-          >
-            <li className="flex flex-col w-72 shadow rounded-lg mb-2">
-              <figure className="flex-col space-y-2">
-                <img
-                  className="h-36 w-64 object-cover object-center rounded-md"
-                  src={`${
-                    tv?.poster_path === null
-                      ? "/assets/tv_null.svg"
-                      : `${image}${tv?.poster_path}`
-                  }`}
-                  alt=""
-                />
 
-                <p className="mt-2 w-60 truncate text-slate-300 dark:text-slate-400 text-md font-l">
-                  {tv?.name}
-                </p>
-              </figure>
-            </li>
-          </Link>
-        ))}
-      </ul>
+      {tvRecom?.results.length === 0 ? (
+        <p className="text-slate-400 text-center py-8">
+          {name} dizisine dayalı öneriler için yeterli veri yok. İzlediğiniz dizileri oylayarak yardımcı olabilirsiniz.
+        </p>
+      ) : (
+        <div className="flex gap-4 overflow-x-auto overflow-y-hidden pb-4 scrollbar-thin scrollbar-thumb-slate-600 scrollbar-track-slate-800">
+          {tvRecom?.results.slice(0, 10).map((tv) => (
+            <Link
+              key={tv.id}
+              to={`/tv/${createSlug(tv.id, tv.original_name)}`}
+              className="flex-shrink-0 w-64 hover:scale-105 transition-transform duration-200"
+            >
+              <div className="bg-slate-800 rounded-lg overflow-hidden shadow-lg">
+                <img
+                  loading="lazy"
+                  className="h-36 w-full object-cover object-center"
+                  src={getPosterUrl(tv.poster_path)}
+                  alt={tv.name}
+                />
+                <div className="p-3">
+                  <p className="text-slate-300 font-medium truncate">
+                    {tv.name}
+                  </p>
+                  {tv.vote_average > 0 && (
+                    <p className="text-slate-500 text-sm mt-1">
+                      ⭐ {tv.vote_average.toFixed(1)}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </Link>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
