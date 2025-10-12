@@ -1,57 +1,62 @@
-import axios from "axios";
-import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { image } from "../../helper";
-import { Movies } from "../../types/Movies";
+import { Link } from 'react-router-dom';
+import { useGetMovieRecommendationsQuery } from '../../api/endpoints/movies.endpoints';
+import { getBackdropUrl, createSlug, extractIdFromSlug } from '../../utils';
 
 type MovieRecommendationProps = {
   id?: string;
 };
 
 function MovieRecommendation({ id }: MovieRecommendationProps) {
-  const [movieRecom, setMovieRecom] = useState<Movies>();
+  const movieId = extractIdFromSlug(id);
+  const { data: recommendations, isLoading } = useGetMovieRecommendationsQuery(movieId!, {
+    skip: !movieId,
+  });
 
-  useEffect(() => {
-    axios(
-      `https://api.themoviedb.org/3/movie/${id}/recommendations?api_key=f23d45e024dfa841dbe4c5648bd1a790&language=en-US&page=1`
-    )
-      .then((res) => res.data)
-      .then((data) => setMovieRecom(data));
-  }, []);
+  if (isLoading) {
+    return (
+      <div className="mt-6">
+        <h3 className="mb-4 text-2xl text-left text-zinc-300 font-semibold">
+          Tavsiyeler
+        </h3>
+        <ul className="flex gap-4 overflow-x-auto">
+          {Array.from({ length: 5 }).map((_, index) => (
+            <li key={index} className="flex flex-col w-72 shadow rounded-lg animate-pulse">
+              <div className="h-40 w-72 bg-slate-700 rounded-md" />
+              <div className="p-2">
+                <div className="h-4 bg-slate-700 rounded w-3/4" />
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>
+    );
+  }
 
-  
+  if (!recommendations?.results.length) {
+    return null;
+  }
+
   return (
-    <div>
-      <h3 className="mt-6 mb-4 text-2xl text-left text-zinc-300 font-semibold">
+    <div className="mt-6">
+      <h3 className="mb-4 text-2xl text-left text-zinc-300 font-semibold">
         Tavsiyeler
       </h3>
-      <ul className="flex gap-4 overflow-scroll overflow-y-hidden">
-        {movieRecom?.results.map((movie) => (
+      <ul className="flex gap-4 overflow-x-auto overflow-y-hidden scrollbar-thin scrollbar-thumb-slate-600 scrollbar-track-slate-800">
+        {recommendations.results.map((movie) => (
           <Link
             key={movie.id}
-            to={`/movie/${movie.id}-${movie.original_title
-              .toLocaleLowerCase()
-              .replaceAll(".", "-")
-              .replaceAll(",", "-")
-              .replaceAll(" ", "-")
-              .replaceAll("--", "-")
-              .replace(":", "")
-              .split(",", 1)}`}
+            to={`/movie/${createSlug(movie.id, movie.original_title)}`}
           >
-            <li className="flex flex-col w-72 shadow rounded-lg mb-2">
-              <figure className="flex-col space-y-2">
+            <li className="flex flex-col w-72 shadow rounded-lg mb-2 hover:scale-105 transition-transform duration-200">
+              <figure className="flex flex-col space-y-2">
                 <img
                   className="h-40 w-72 object-cover object-center rounded-md"
-                  src={`${
-                    movie?.poster_path === null
-                      ? "/assets/nullUser.svg"
-                      : `${image}${movie?.poster_path}`
-                  }`}
-                  alt=""
+                  src={getBackdropUrl(movie.backdrop_path)}
+                  alt={movie.title}
+                  loading="lazy"
                 />
-
-                <p className="mt-2 w-70 truncate text-slate-300 dark:text-slate-400 text-md font-l">
-                  {movie?.title}
+                <p className="mt-2 px-2 pb-2 w-70 truncate text-slate-300 text-md font-medium">
+                  {movie.title}
                 </p>
               </figure>
             </li>
