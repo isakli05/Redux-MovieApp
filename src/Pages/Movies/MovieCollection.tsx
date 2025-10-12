@@ -63,7 +63,7 @@ function MovieCollection() {
         </h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {movieCollect.parts
+          {[...movieCollect.parts]
             .sort((a, b) => {
               const dateA = new Date(a.release_date || '').getTime();
               const dateB = new Date(b.release_date || '').getTime();
