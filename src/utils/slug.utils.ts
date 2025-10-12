@@ -17,13 +17,19 @@ export const createSlug = (id: number, title: string): string => {
 };
 
 /**
- * Slug'dan ID çıkarır
- * @param slug - Slug string (örn: "123-the-matrix")
+ * Slug'dan veya düz ID'den ID çıkarır
+ * @param slug - Slug string (örn: "123-the-matrix") veya düz ID ("123")
  * @returns ID veya null
  */
 export const extractIdFromSlug = (slug: string | undefined): string | null => {
   if (!slug) return null;
   
+  // Eğer sadece sayı ise direkt döndür
+  if (/^\d+$/.test(slug)) {
+    return slug;
+  }
+  
+  // Slug formatından ID çıkar (örn: "123-the-matrix" -> "123")
   const match = slug.match(/^(\d+)-/);
   return match ? match[1] : null;
 };
