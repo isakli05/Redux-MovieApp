@@ -1,19 +1,16 @@
-export const image = "https://image.tmdb.org/t/p/original";
+/**
+ * @deprecated Bu dosya artık kullanılmıyor.
+ * Lütfen @utils paketini kullanın:
+ * - import { getPosterUrl, formatDate, formatDuration } from '@utils';
+ * 
+ * Bu dosya geriye dönük uyumluluk için tutulmaktadır.
+ */
 
-export let air_date = (date: string) =>
-  new Date(String(date)).toLocaleDateString("tr-TR", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
+import { TMDB_CONFIG } from '@utils/constants';
+import { formatDate as utilFormatDate, formatDuration as utilFormatDuration } from '@utils';
 
-export const timeConvert = (n: number) => {
-  let num = n;
-  let hours = num / 60;
-  let rhours = Math.floor(hours);
-  let minutes = (hours - rhours) * 60;
-  let rminutes = Math.round(minutes);
-  return `${rhours === 0 ? "" : rhours + "h"} ${
-    rminutes > 0 ? rminutes + "m" : ""
-  }`;
-};
+export const image = TMDB_CONFIG.IMAGE_BASE_URL;
+
+export const air_date = (date: string) => utilFormatDate(date);
+
+export const timeConvert = (n: number) => utilFormatDuration(n);

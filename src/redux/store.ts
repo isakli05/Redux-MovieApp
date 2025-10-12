@@ -1,39 +1,28 @@
-import { configureStore } from "@reduxjs/toolkit";
-import { useDispatch, useSelector, TypedUseSelectorHook } from "react-redux";
-import movieCollectSlice from "./movies/movieCollectSlice";
-import movieCreditsSlice from "./movies/movieCreditsSlice";
-import movieDetailSlice from "./movies/movieDetailSlice";
-import moviesSlice from "./movies/moviesSlice";
-import nowMoviesSlice from "./movies/nowMoviesSlice";
-import upcomingMoviesSlice from "./movies/upcomingMoviesSlice";
-import personSlice from "./persons/personSlice";
-import tvAirTodaySlice from "./tvShows/tvAirTodaySlice";
-import tvCreditsSlice from "./tvShows/tvCreditSlice";
-import tvOnAirSlice from "./tvShows/tvOnAirSlice";
-import tvSeasonsSlice from "./tvShows/tvSeasonsSlice";
-import tvDetailSlice from "./tvShows/tvShowsDetailSlice";
-import tvShowsSlice from "./tvShows/tvShowsSlice";
+/**
+ * Redux Store Configuration
+ * RTK Query ile güncellenmiş modern store yapılandırması
+ */
+
+import { configureStore } from '@reduxjs/toolkit';
+import { useDispatch, useSelector, TypedUseSelectorHook } from 'react-redux';
+import { tmdbApi } from '../api/tmdb.api';
 
 export const store = configureStore({
   reducer: {
-    movies: moviesSlice,
-    persons: personSlice,
-    nowMovies: nowMoviesSlice,
-    upcomingMovies: upcomingMoviesSlice,
-    movieCollect: movieCollectSlice,
-    movieCredits: movieCreditsSlice,
-    movieDetail: movieDetailSlice,
-    tvs: tvShowsSlice,
-    tvDetails: tvDetailSlice,
-    tvCredits: tvCreditsSlice,
-    tvSeasons: tvSeasonsSlice,
-    tvOnAir: tvOnAirSlice,
-    tvAirToday: tvAirTodaySlice,
+    // RTK Query API reducer
+    [tmdbApi.reducerPath]: tmdbApi.reducer,
+    
+    // Eğer local state slice'ları olacaksa buraya eklenebilir
+    // Örneğin: favorites, theme, ui state vb.
   },
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware().concat(tmdbApi.middleware),
 });
 
+// Store types
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
 
+// Typed hooks
 export const useAppDispatch: () => AppDispatch = useDispatch;
 export const useAppSelector: TypedUseSelectorHook<RootState> = useSelector;
