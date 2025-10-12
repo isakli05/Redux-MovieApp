@@ -1,11 +1,16 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { StarIcon, PlayIcon, GiftIcon } from '@heroicons/react/24/solid';
 import { useGetFreeMoviesQuery } from '../../api/endpoints/movies.endpoints';
 import { useGetFreeTVShowsQuery } from '../../api/endpoints/tv.endpoints';
 import { getPosterUrl, createSlug, formatDate } from '../../utils';
-import type { Result } from '../../types/Movies';
 
 type MediaType = 'movie' | 'tv';
+
+const mediaOptions = [
+  { id: 0, label: 'Filmler', value: 'movie' as MediaType },
+  { id: 1, label: 'Diziler', value: 'tv' as MediaType },
+];
 
 function Free() {
   const [type, setType] = useState<MediaType>('movie');
@@ -27,82 +32,115 @@ function Free() {
   const isLoading = type === 'movie' ? moviesLoading : tvLoading;
   const results = type === 'movie' ? freeMovies?.results : freeTVShows?.results;
 
-  const buttonClasses = (isActive: boolean) => `
-    ${isActive ? 'bg-cyan-400 transition duration-500 ease-linear' : 'bg-white'}
-    px-4 py-2 text-sm font-medium text-gray-900 border border-gray-200 
-    dark:bg-gray-700 dark:border-gray-600 dark:text-white hover:bg-cyan-300 transition-colors
-  `;
-
   return (
-    <div>
-      <div className="flex m-5 mt-20">
-        <h3 className="mr-6 text-2xl text-left text-zinc-300 font-semibold">
-          Free To Watch
-        </h3>
-        <div className="flex-col rounded-xl shadow-sm" role="group">
-          <button
-            onClick={() => handleClick(0, 'movie')}
-            className={`${buttonClasses(activeIndex === 0)} rounded-l-xl`}
-            aria-pressed={activeIndex === 0}
-          >
-            Movies
-          </button>
-          <button
-            onClick={() => handleClick(1, 'tv')}
-            className={`${buttonClasses(activeIndex === 1)} rounded-r-xl`}
-            aria-pressed={activeIndex === 1}
-          >
-            TV
-          </button>
+    <section className="relative">
+      {/* Section Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+        <div className="space-y-2">
+          <div className="flex items-center gap-3">
+            <GiftIcon className="h-8 w-8 text-green-400" />
+            <h2 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">
+              Ücretsiz İçerikler
+            </h2>
+          </div>
+          <p className="text-slate-400">Tamamen ücretsiz izleyebileceğiniz içerikler</p>
+        </div>
+
+        {/* Media Type Tabs */}
+        <div className="flex gap-2 bg-slate-800/50 backdrop-blur-lg border border-slate-700/50 p-1.5 rounded-xl">
+          {mediaOptions.map((option) => (
+            <button
+              key={option.id}
+              onClick={() => handleClick(option.id, option.value)}
+              className={`
+                px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300
+                ${activeIndex === option.id
+                  ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-700/50'
+                }
+              `}
+            >
+              {option.label}
+            </button>
+          ))}
         </div>
       </div>
 
-      <div className="m-5">
-        {isLoading ? (
-          <ul className="flex overflow-x-auto overflow-y-hidden gap-4">
-            {Array.from({ length: 10 }).map((_, index) => (
-              <li key={index} className="flex flex-col w-40 gap-2 animate-pulse">
-                <div className="h-56 w-36 bg-slate-700 rounded-md" />
-                <div className="h-4 w-28 bg-slate-700 rounded" />
-                <div className="h-3 w-20 bg-slate-700 rounded" />
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <ul className="flex overflow-x-auto overflow-y-hidden gap-4 scrollbar-thin scrollbar-thumb-slate-600 scrollbar-track-slate-800">
-            {results?.map((item: any) => {
-              const title = type === 'tv' ? item.name : item.title;
-              const originalTitle = type === 'tv' ? item.original_name : item.original_title;
-              const releaseDate = type === 'tv' ? item.first_air_date : item.release_date;
+      {/* Content Grid */}
+      {isLoading ? (
+        <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-slate-600 scrollbar-track-slate-800/50">
+          {Array.from({ length: 10 }).map((_, index) => (
+            <div key={index} className="flex-shrink-0 w-48 animate-pulse">
+              <div className="aspect-[2/3] bg-slate-700/50 rounded-xl mb-3" />
+              <div className="h-4 bg-slate-700/50 rounded w-3/4 mb-2" />
+              <div className="h-3 bg-slate-700/50 rounded w-1/2" />
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-green-500/50 scrollbar-track-slate-800/50">
+          {results?.map((item: any) => {
+            const title = type === 'tv' ? item.name : item.title;
+            const originalTitle = type === 'tv' ? item.original_name : item.original_title;
+            const releaseDate = type === 'tv' ? item.first_air_date : item.release_date;
 
-              return (
-                <Link
-                  key={item.id}
-                  to={`/${type}/${createSlug(item.id, originalTitle)}`}
-                >
-                  <li className="flex flex-col w-40 gap-2 shadow rounded-lg mb-2 hover:scale-105 transition-transform duration-200">
-                    <figure className="flex flex-col space-y-2">
-                      <img
-                        loading="lazy"
-                        className="h-56 w-36 object-cover object-top rounded-md"
-                        src={getPosterUrl(item.poster_path)}
-                        alt={title}
-                      />
-                      <p className="mt-2 w-28 text-slate-100 text-md font-medium truncate">
-                        {title}
-                      </p>
-                      <p className="mt-1 w-28 text-slate-400 text-sm">
-                        {formatDate(releaseDate, { year: 'numeric', month: 'short', day: 'numeric' })}
-                      </p>
-                    </figure>
-                  </li>
-                </Link>
-              );
-            })}
-          </ul>
-        )}
-      </div>
-    </div>
+            return (
+              <Link
+                key={item.id}
+                to={`/${type}/${createSlug(item.id, originalTitle)}`}
+                className="group flex-shrink-0 w-48"
+              >
+                <div className="relative">
+                  {/* Card */}
+                  <div className="relative aspect-[2/3] rounded-xl overflow-hidden mb-3 shadow-xl">
+                    {/* Free Badge */}
+                    <div className="absolute top-2 left-2 z-10 px-2 py-1 bg-green-500 text-white text-xs font-bold rounded-lg flex items-center gap-1">
+                      <GiftIcon className="h-3 w-3" />
+                      ÜCRETSİZ
+                    </div>
+
+                    {/* Rating Badge */}
+                    <div className="absolute top-2 right-2 z-10 flex items-center gap-1 px-2 py-1 bg-black/70 backdrop-blur-sm rounded-lg">
+                      <StarIcon className="h-4 w-4 text-yellow-400" />
+                      <span className="text-white text-sm font-bold">
+                        {item.vote_average.toFixed(1)}
+                      </span>
+                    </div>
+
+                    {/* Hover Overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="bg-green-500/90 backdrop-blur-sm p-4 rounded-full transform scale-0 group-hover:scale-100 transition-transform duration-300">
+                          <PlayIcon className="h-8 w-8 text-white" />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Poster */}
+                    <img
+                      loading="lazy"
+                      src={getPosterUrl(item.poster_path)}
+                      alt={title}
+                      className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"
+                    />
+                  </div>
+
+                  {/* Info */}
+                  <div className="space-y-1">
+                    <h3 className="font-semibold text-white group-hover:text-green-400 transition-colors line-clamp-2 leading-tight">
+                      {title}
+                    </h3>
+                    <p className="text-sm text-slate-400">
+                      {formatDate(releaseDate, { year: 'numeric' })}
+                    </p>
+                  </div>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+      )}
+    </section>
   );
 }
 

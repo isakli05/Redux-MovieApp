@@ -1,9 +1,16 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { StarIcon, PlayIcon } from '@heroicons/react/24/solid';
 import { useDiscoverMoviesQuery } from '../../api/endpoints/movies.endpoints';
-import { getPosterUrl, createSlug, formatDate } from '../../utils';
+import { getPosterUrl, createSlug, formatDate, voteToPercentage } from '../../utils';
 
 type WatchType = 'with_watch_monetization_types=flatrate' | 'with_watch_monetization_types=rent' | 'with_watch_monetization_type=3|2';
+
+const categories = [
+  { id: 0, label: 'Streaming', value: 'with_watch_monetization_types=flatrate' as WatchType },
+  { id: 2, label: 'Kiralık', value: 'with_watch_monetization_types=rent' as WatchType },
+  { id: 3, label: 'Sinemada', value: 'with_watch_monetization_type=3|2' as WatchType },
+];
 
 function Popular() {
   const [watchType, setWatchType] = useState<WatchType>('with_watch_monetization_types=flatrate');
@@ -16,83 +23,100 @@ function Popular() {
     setActiveIndex(index);
   };
 
-  const buttonClasses = (isActive: boolean) => `
-    ${isActive ? 'bg-cyan-400 transition duration-500 ease-linear' : 'bg-white'}
-    p-2 md:px-4 md:py-2 text-xs lg:text-sm font-medium text-gray-900 border border-gray-200 
-    dark:bg-gray-700 dark:border-gray-600 dark:text-white hover:bg-cyan-300 transition-colors
-  `;
-
   return (
-    <div>
-      <div className="flex m-5">
-        <h3 className="mr-3 lg:mr-6 lg:text-2xl text-sm md:text-xl text-left text-zinc-300 font-semibold w-14 lg:w-max">
-          What's Popular
-        </h3>
-        <div className="flex-col lg:text-2xl rounded-xl shadow-sm" role="group">
-          <button
-            onClick={() => handleClick(0, 'with_watch_monetization_types=flatrate')}
-            className={`${buttonClasses(activeIndex === 0)} rounded-l-xl`}
-            aria-pressed={activeIndex === 0}
-          >
-            Streaming
-          </button>
-          <button
-            onClick={() => handleClick(2, 'with_watch_monetization_types=rent')}
-            className={buttonClasses(activeIndex === 2)}
-            aria-pressed={activeIndex === 2}
-          >
-            For Rent
-          </button>
-          <button
-            onClick={() => handleClick(3, 'with_watch_monetization_type=3|2')}
-            className={`${buttonClasses(activeIndex === 3)} rounded-r-xl`}
-            aria-pressed={activeIndex === 3}
-          >
-            In Theaters
-          </button>
+    <section className="relative">
+      {/* Section Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+        <div className="space-y-2">
+          <h2 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-white to-cyan-200 bg-clip-text text-transparent">
+            Popüler Filmler
+          </h2>
+          <p className="text-slate-400">En çok izlenen ve beğenilen filmler</p>
+        </div>
+
+        {/* Category Tabs */}
+        <div className="flex gap-2 bg-slate-800/50 backdrop-blur-lg border border-slate-700/50 p-1.5 rounded-xl">
+          {categories.map((category) => (
+            <button
+              key={category.id}
+              onClick={() => handleClick(category.id, category.value)}
+              className={`
+                px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300
+                ${activeIndex === category.id
+                  ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-lg'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-700/50'
+                }
+              `}
+            >
+              {category.label}
+            </button>
+          ))}
         </div>
       </div>
 
-      <div className="m-5">
-        {isLoading ? (
-          <ul className="flex overflow-x-auto overflow-y-hidden gap-4">
-            {Array.from({ length: 10 }).map((_, index) => (
-              <li key={index} className="flex flex-col w-40 gap-2 animate-pulse">
-                <div className="h-56 w-36 bg-slate-700 rounded-md" />
-                <div className="h-4 w-28 bg-slate-700 rounded" />
-                <div className="h-3 w-20 bg-slate-700 rounded" />
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <ul className="flex overflow-x-auto overflow-y-hidden gap-4 scrollbar-thin scrollbar-thumb-slate-600 scrollbar-track-slate-800">
-            {popular?.results.map((movie) => (
-              <Link
-                key={movie.id}
-                to={`/movie/${createSlug(movie.id, movie.original_title)}`}
-              >
-                <li className="flex flex-col w-40 gap-2 shadow rounded-lg mb-2 hover:scale-105 transition-transform duration-200">
-                  <figure className="flex flex-col space-y-2">
-                    <img
-                      loading="lazy"
-                      className="h-56 w-36 object-cover object-top rounded-md"
-                      src={getPosterUrl(movie.poster_path)}
-                      alt={movie.title}
-                    />
-                    <p className="mt-2 w-28 text-gray-100 text-md font-medium truncate">
-                      {movie.title}
-                    </p>
-                    <p className="mt-1 w-28 text-slate-400 text-sm">
-                      {formatDate(movie.release_date, { year: 'numeric', month: 'short', day: 'numeric' })}
-                    </p>
-                  </figure>
-                </li>
-              </Link>
-            ))}
-          </ul>
-        )}
-      </div>
-    </div>
+      {/* Movies Grid */}
+      {isLoading ? (
+        <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-slate-600 scrollbar-track-slate-800/50">
+          {Array.from({ length: 10 }).map((_, index) => (
+            <div key={index} className="flex-shrink-0 w-48 animate-pulse">
+              <div className="aspect-[2/3] bg-slate-700/50 rounded-xl mb-3" />
+              <div className="h-4 bg-slate-700/50 rounded w-3/4 mb-2" />
+              <div className="h-3 bg-slate-700/50 rounded w-1/2" />
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-cyan-500/50 scrollbar-track-slate-800/50">
+          {popular?.results.map((movie) => (
+            <Link
+              key={movie.id}
+              to={`/movie/${createSlug(movie.id, movie.original_title)}`}
+              className="group flex-shrink-0 w-48"
+            >
+              <div className="relative">
+                {/* Movie Card */}
+                <div className="relative aspect-[2/3] rounded-xl overflow-hidden mb-3 shadow-xl">
+                  {/* Rating Badge */}
+                  <div className="absolute top-2 right-2 z-10 flex items-center gap-1 px-2 py-1 bg-black/70 backdrop-blur-sm rounded-lg">
+                    <StarIcon className="h-4 w-4 text-yellow-400" />
+                    <span className="text-white text-sm font-bold">
+                      {movie.vote_average.toFixed(1)}
+                    </span>
+                  </div>
+
+                  {/* Hover Overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="bg-cyan-500/90 backdrop-blur-sm p-4 rounded-full transform scale-0 group-hover:scale-100 transition-transform duration-300">
+                        <PlayIcon className="h-8 w-8 text-white" />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Movie Poster */}
+                  <img
+                    loading="lazy"
+                    src={getPosterUrl(movie.poster_path)}
+                    alt={movie.title}
+                    className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"
+                  />
+                </div>
+
+                {/* Movie Info */}
+                <div className="space-y-1">
+                  <h3 className="font-semibold text-white group-hover:text-cyan-400 transition-colors line-clamp-2 leading-tight">
+                    {movie.title}
+                  </h3>
+                  <p className="text-sm text-slate-400">
+                    {formatDate(movie.release_date, { year: 'numeric' })}
+                  </p>
+                </div>
+              </div>
+            </Link>
+          ))}
+        </div>
+      )}
+    </section>
   );
 }
 
