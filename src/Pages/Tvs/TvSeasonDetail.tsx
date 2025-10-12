@@ -1,110 +1,101 @@
-import React, { useEffect } from "react";
-import { Link, useParams } from "react-router-dom";
-import TvSeasonBanner from "../../components/Tvs/TvSeasonBanner";
-import { air_date, image, timeConvert } from "../../helper";
-import { useAppDispatch, useAppSelector } from "../../redux/store";
-import { fetchTvSeasons } from "../../redux/tvShows/tvSeasonsSlice";
-
-type TvSeasonsProps = {
-  tv_id?: string;
-  season_number?: string;
-};
+import { Link, useParams } from 'react-router-dom';
+import { useGetTVSeasonDetailsQuery } from '../../api/endpoints/tv.endpoints';
+import { getPosterUrl, formatDate, formatDuration, extractIdFromSlug } from '../../utils';
+import TvSeasonBanner from '../../components/Tvs/TvSeasonBanner';
+import Loading from '../../components/Loading';
 
 function TvSeasonDetail() {
-  const { tv_id, season_number } = useParams<TvSeasonsProps>();
-  const season_episodes = useAppSelector((state) => state.tvSeasons.data);
-  const status = useAppSelector((state) => state.tvSeasons.loading);
-  const dispatch = useAppDispatch();
-  useEffect(() => {
-    dispatch(fetchTvSeasons({ tv_id, season_number }));
-    window.scrollTo(0, 0);
-  }, [tv_id, season_number, dispatch]);
-  
+  const { tv_id, season_number } = useParams<{ tv_id: string; season_number: string }>();
+  const tvId = extractIdFromSlug(tv_id);
+
+  const { data: seasonDetail, isLoading } = useGetTVSeasonDetailsQuery(
+    { tvId: tvId!, seasonNumber: Number(season_number) },
+    { skip: !tvId || !season_number }
+  );
+
+  if (isLoading || !seasonDetail) {
+    return <Loading />;
+  }
+
   return (
-    <>
-    {status==="pending" ? (
-      <div className="flex  flex-col md:flex-row items-center justify-center px-6 py-4 space-y-2 text-center">
-        <button
-          type="button"
-          className="bg-transparent w-56 border-0 py-2 px-6 focus:outline-none  rounded text-lg"
-          disabled
-        >
-          <div role="status">
-            <svg
-              aria-hidden="true"
-              className="m-auto w-8 h-8 text-gray-200 animate-spin dark:text-gray-600 fill-blue-600"
-              viewBox="0 0 100 101"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
+    <div className="min-h-screen bg-slate-900">
+      <TvSeasonBanner />
+
+      <div className="container mx-auto px-4 py-8">
+        <div className="space-y-8">
+          {seasonDetail.episodes?.map((episode) => (
+            <div
+              key={episode.id}
+              className="flex flex-col md:flex-row gap-6 p-6 bg-slate-800 rounded-lg hover:bg-slate-700 transition-colors"
             >
-              <path
-                d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z"
-                fill="currentColor"
-              />
-              <path
-                d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z"
-                fill="currentFill"
-              />
-            </svg>
-            <span className="sr-only">Loading...</span>
-          </div>
-        </button>
-      </div>
-    ) : (
-      <>
-    <div className="mb-5 bg-slate-900">
-      <TvSeasonBanner tv_id={tv_id!} />
-      <div className="w-full">
-        <h1 className="flex mt-10 text-2xl ml-10 font-medium leading-tight">
-          <span className="text-white">
-            Bölümler {season_episodes?.episodes?.length}
-          </span>
-        </h1>
-      </div>
-      <div className="text-gray-100 body-font overflow-hidden">
-        <div className="pb-6 mx-10">
-          <div className="space-y-10">
-            {season_episodes?.episodes?.map((episodes) => (
-              <div
-                key={episodes.id}
-                className="py-3 flex flex-wrap md:flex-nowrap"
-              >
-                <div className="flex-shrink-0 flex flex-col ">
-                  {/* <Link to={`/tv/${tv_id}/season/${season_number}/episode/${episodes.episode_number}`}> */}
-                  <img
-                    loading="lazy"
-                    className="h-36 mb-2 ml-5 md:ml-0 md:w-56 rounded-md"
-                    src={`${
-                      episodes?.still_path === null
-                        ? "/assets/tv_null.svg"
-                        : `${image}${episodes?.still_path}`
-                    }`}
-                    alt={`${episodes?.name}`}
-                  />
-                  {/* </Link> */}
-                </div>
-                <div className="md:flex-grow ml-5">
-                  <div className="flex justify-between">
-                    <h2 className="text-xl md:text-2xl font-medium text-gray-100 title-font">
-                      {episodes.name}
-                    </h2>
-                    <h2 className="text-gray-500 text-sm">
-                      {air_date(episodes.air_date)}
-                      <br />
-                      {timeConvert(episodes.runtime)}
-                    </h2>
-                  </div>
-                  <p className="leading-relaxed mt-6 text-zinc-300">{episodes.overview}</p>
-                </div>
+              {/* Episode Image */}
+              <div className="flex-shrink-0">
+                <img
+                  loading="lazy"
+                  className="w-full md:w-64 h-48 md:h-36 rounded-md object-cover"
+                  src={getPosterUrl(episode.still_path)}
+                  alt={episode.name}
+                />
               </div>
-            ))}
-          </div>
+
+              {/* Episode Info */}
+              <div className="flex-1 space-y-3">
+                <div className="flex justify-between items-start">
+                  <h3 className="text-xl md:text-2xl font-semibold text-gray-100">
+                    {episode.episode_number}. {episode.name}
+                  </h3>
+                  {episode.runtime && (
+                    <span className="text-slate-400 text-sm whitespace-nowrap ml-4">
+                      {formatDuration(episode.runtime)}
+                    </span>
+                  )}
+                </div>
+
+                <div className="flex gap-4 text-sm text-slate-400">
+                  {episode.air_date && (
+                    <span>{formatDate(episode.air_date)}</span>
+                  )}
+                  {episode.vote_average > 0 && (
+                    <span>⭐ {episode.vote_average.toFixed(1)}</span>
+                  )}
+                </div>
+
+                {episode.overview && (
+                  <p className="text-gray-300 leading-relaxed">
+                    {episode.overview}
+                  </p>
+                )}
+
+                {episode.guest_stars && episode.guest_stars.length > 0 && (
+                  <div>
+                    <h4 className="text-sm font-semibold text-slate-400 mb-2">
+                      Konuk Oyuncular:
+                    </h4>
+                    <div className="flex flex-wrap gap-2">
+                      {episode.guest_stars.slice(0, 5).map((star) => (
+                        <Link
+                          key={star.id}
+                          to={`/person/${star.id}`}
+                          className="text-sm text-cyan-400 hover:text-cyan-300"
+                        >
+                          {star.name}
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
         </div>
+
+        {seasonDetail.episodes?.length === 0 && (
+          <div className="text-center py-12">
+            <p className="text-gray-400 text-lg">Bu sezon için bölüm bilgisi bulunamadı.</p>
+          </div>
+        )}
       </div>
     </div>
-    </>
-      )}
-    </>
   );
 }
 

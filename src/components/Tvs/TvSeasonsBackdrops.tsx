@@ -1,67 +1,82 @@
-import React, { useEffect } from "react";
-import { Link, useParams } from "react-router-dom";
-import { air_date, image } from "../../helper";
-import { useAppDispatch, useAppSelector } from "../../redux/store";
-import { fetchTvSeasons } from "../../redux/tvShows/tvSeasonsSlice";
+import { Link, useParams } from 'react-router-dom';
+import { useGetTVShowDetailsQuery } from '../../api/endpoints/tv.endpoints';
+import { getPosterUrl, formatDate, extractIdFromSlug } from '../../utils';
 
-type TvSeasonsProps = {
-  tv_id?: string;
-  season_number?: string;
-  title?: string;
-};
+function TvSeasonsBackdrops() {
+  const { id } = useParams();
+  const tvId = extractIdFromSlug(id);
 
-function TvSeasonsBackdrops({ tv_id, title, season_number }: TvSeasonsProps) {
-  const tvSeasons = useAppSelector((state) => state.tvSeasons.data);
-  const status = useAppSelector((state) => state.tvSeasons.loading);
-  const dispatch = useAppDispatch();
+  const { data: tvDetail } = useGetTVShowDetailsQuery(tvId!, {
+    skip: !tvId,
+  });
 
-  useEffect(() => {
-    dispatch(fetchTvSeasons({ tv_id, season_number }));
-  }, [tv_id, season_number, dispatch]);
+  if (!tvDetail || !tvDetail.seasons || tvDetail.seasons.length === 0) {
+    return null;
+  }
 
-  const date=air_date(String(tvSeasons?.air_date))
+  // Get the latest season (usually the last one, excluding "Specials")
+  const currentSeason = tvDetail.seasons
+    .filter(season => season.season_number > 0)
+    .sort((a, b) => b.season_number - a.season_number)[0] || tvDetail.seasons[0];
+
   return (
-    <div className="mt-10 relative">
-      <h3 className="text-2xl mb-5 text-left text-zinc-300 font-semibold">
-        Şuanki Sezon
-      </h3>
-      <figure className="w-full text-zinc-300">
+    <div className="mt-10">
+      <div className="flex justify-between items-center mb-5">
+        <h3 className="text-2xl text-left text-zinc-300 font-semibold">
+          Şuanki Sezon
+        </h3>
         <Link
-          to={`/tv/${tv_id}/season/${tvSeasons?.season_number}`}
-          className=""
+          to={`/tv/${id}/seasons`}
+          className="text-cyan-400 hover:text-cyan-300 font-medium transition-colors"
         >
+          Tüm Sezonları Gör →
+        </Link>
+      </div>
+
+      <Link
+        to={`/tv/${id}/season/${currentSeason.season_number}`}
+        className="flex gap-6 p-4 bg-slate-800 rounded-lg hover:bg-slate-700 transition-colors group"
+      >
+        {/* Poster */}
+        <figure className="flex-shrink-0">
           <img
             loading="lazy"
-            src={`${
-                      tvSeasons?.poster_path === null
-                        ? "/assets/tv_null.svg"
-                        : `${image}${tvSeasons?.poster_path}`
-                    }`}
-            className="h-48 w-32 object-top object-cover rounded-lg text-zinc-300"
-            alt={`${tvSeasons?.name}`}
+            src={getPosterUrl(currentSeason.poster_path)}
+            className="h-48 w-32 object-cover rounded-lg shadow-md"
+            alt={currentSeason.name}
           />
-        </Link>
-      </figure>
+        </figure>
 
-      <div className="lg:w-full p-4 absolute left-36 top-16 text-zinc-300">
-      <Link
-          to={`/tv/${tv_id}/season/${tvSeasons?.season_number}`}
-          className=""
-        >
-        <p className="text-lg font-semibold leading-tight mb-2 ">
-          {tvSeasons?.name}          
-        </p>
-        </Link>
+        {/* Season Info */}
+        <div className="flex-1 space-y-3 text-zinc-300">
+          <h4 className="text-xl font-semibold group-hover:text-cyan-400 transition-colors">
+            {currentSeason.name}
+          </h4>
 
-        <p className="text-md font-semibold leading-tight text-zinc-300">
-          {tvSeasons?.air_date?.slice(0, 4)} | {tvSeasons?.episodes.length} Bölüm
-        </p>
-        <h1 className="hidden lg:block text-slate-300 mt-9 lg:w-11/12">
-          {title} dizisinin {tvSeasons?.season_number}. sezonu {date}{" "}
-          tarihinde gösterime girdi.
-        </h1>
-      </div>
+          <div className="flex gap-3 text-sm text-slate-400">
+            {currentSeason.air_date && (
+              <span>{currentSeason.air_date.slice(0, 4)}</span>
+            )}
+            <span>•</span>
+            <span>{currentSeason.episode_count} Bölüm</span>
+          </div>
+
+          {currentSeason.overview ? (
+            <p className="text-slate-300 leading-relaxed line-clamp-3">
+              {currentSeason.overview}
+            </p>
+          ) : (
+            <p className="text-slate-400 leading-relaxed">
+              {tvDetail.name} dizisinin {currentSeason.season_number}. sezonu
+              {currentSeason.air_date && (
+                <> {formatDate(currentSeason.air_date)} tarihinde gösterime girdi</>
+              )}.
+            </p>
+          )}
+        </div>
+      </Link>
     </div>
   );
 }
+
 export default TvSeasonsBackdrops;

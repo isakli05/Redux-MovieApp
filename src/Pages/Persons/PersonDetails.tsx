@@ -1,79 +1,115 @@
-import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
-import { PersonDetail } from "../../types/personDetail";
-import axios from "axios";
-import { image } from "../../helper";
+import { useParams } from 'react-router-dom';
+import { useGetPersonDetailsQuery } from '../../api/endpoints/persons.endpoints';
+import { getProfileUrl, formatDate } from '../../utils';
+import Loading from '../../components/Loading';
 
 function PersonDetails() {
   const { cast_id } = useParams();
-  const [cast, setCast] = useState<PersonDetail>();
-  useEffect(() => {
-    axios(
-      `https://api.themoviedb.org/3/person/${cast_id}?api_key=f23d45e024dfa841dbe4c5648bd1a790&language=tr|en`
-    )
-      .then((res) => res.data)
-      .then((data) => setCast(data));
-  }, []);
+  
+  const { data: cast, isLoading, error } = useGetPersonDetailsQuery(cast_id!, {
+    skip: !cast_id,
+  });
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+        <p className="text-red-400 text-xl">Kişi bilgileri yüklenirken bir hata oluştu.</p>
+      </div>
+    );
+  }
+
+  if (isLoading || !cast) {
+    return <Loading />;
+  }
 
   return (
-    <div className="md:py-8 bg-slate-900 text-slate-100 px-4 flex">
-      <img
-        loading="lazy"
-        src={`${
-         cast?.profile_path === null
-            ? "/assets/nullUser.svg"
-            : `${image}/${cast?.profile_path}`
-        }`}
-        alt={cast?.name}
-        className="rounded-md h-48 md:h-96 object-cover"
-      />
+    <div className="min-h-screen bg-slate-900 text-slate-100">
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex flex-col md:flex-row gap-8">
+          {/* Profile Image */}
+          <div className="md:w-1/3">
+            <img
+              loading="lazy"
+              src={getProfileUrl(cast.profile_path)}
+              alt={cast.name}
+              className="rounded-lg w-full object-cover shadow-2xl"
+            />
+          </div>
 
-      <div className="space-y-8">
-        <h2 className="text-3xl lg:text-5xl md:text-left ml-3 font-semibold">
-          {cast?.name}
-                  </h2>
+          {/* Info */}
+          <div className="md:w-2/3 space-y-8">
+            <h1 className="text-3xl lg:text-5xl font-bold">
+              {cast.name}
+            </h1>
 
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="px-2 md:px-4">
-            <div className="hidden md:block">
-            <h3 className="text-2xl font-semibold">Biyografi</h3>
-            <p className="text-slate-400 leading-relaxed">
-              {cast?.biography === ""
-                ? "Biyografi bulunamadı"
-                : cast?.biography}
-            </p>
+            {/* Biography */}
+            {cast.biography && (
+              <div>
+                <h2 className="text-2xl font-semibold mb-3">Biyografi</h2>
+                <p className="text-slate-300 leading-relaxed whitespace-pre-line">
+                  {cast.biography}
+                </p>
+              </div>
+            )}
+
+            {/* Personal Info */}
+            <div>
+              <h2 className="text-2xl font-semibold mb-4">Kişisel Bilgiler</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div>
+                  <h3 className="font-bold text-lg text-slate-400 mb-1">Bilinen İşi</h3>
+                  <p className="text-slate-100">
+                    {cast.known_for_department === 'Acting' ? 'Oyuncu' : cast.known_for_department}
+                  </p>
+                </div>
+
+                <div>
+                  <h3 className="font-bold text-lg text-slate-400 mb-1">Cinsiyet</h3>
+                  <p className="text-slate-100">
+                    {cast.gender === 1 ? 'Kadın' : cast.gender === 2 ? 'Erkek' : 'Belirtilmemiş'}
+                  </p>
+                </div>
+
+                {cast.birthday && (
+                  <div>
+                    <h3 className="font-bold text-lg text-slate-400 mb-1">Doğum Tarihi</h3>
+                    <p className="text-slate-100">
+                      {formatDate(cast.birthday)}
+                    </p>
+                  </div>
+                )}
+
+                {cast.place_of_birth && (
+                  <div>
+                    <h3 className="font-bold text-lg text-slate-400 mb-1">Doğum Yeri</h3>
+                    <p className="text-slate-100">{cast.place_of_birth}</p>
+                  </div>
+                )}
+
+                {cast.deathday && (
+                  <div>
+                    <h3 className="font-bold text-lg text-slate-400 mb-1">Vefat Tarihi</h3>
+                    <p className="text-slate-100">
+                      {formatDate(cast.deathday)}
+                    </p>
+                  </div>
+                )}
+
+                {cast.homepage && (
+                  <div>
+                    <h3 className="font-bold text-lg text-slate-400 mb-1">Website</h3>
+                    <a
+                      href={cast.homepage}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-400 hover:text-blue-300 transition-colors"
+                    >
+                      Websiteyi Ziyaret Et
+                    </a>
+                  </div>
+                )}
+              </div>
             </div>
-            <h3 className="text-2xl md:mt-6 mb-3 font-semibold">
-              Kişisel Bilgiler
-            </h3>
-            <ul className="flex flex-col lg:flex-row gap-5">
-              <li className="flex flex-col items-left">
-                <h5 className="font-bold text-xl">Bilinen işi</h5>
-                <p className="text-slate-100 font-medium ">
-                  {cast?.known_for_department.toString() === "Acting"
-                    ? "Oyuncu"
-                    : cast?.known_for_department}
-                </p>
-              </li>
-              <li className="flex flex-col items-left">
-                <h5 className="font-bold text-xl">Cinsiyet</h5>
-                <p className="text-slate-100 font-medium ">
-                  {cast?.gender.toString() === "1" ? "Kadın" : "Erkek"}
-                </p>
-              </li>
-              <li className="flex flex-col items-left">
-                <h5 className="font-bold text-xl">Doğum Günü</h5>
-                <p className="text-slate-100 font-medium ">
-                  {cast?.birthday}
-                </p>
-              </li>
-              <li className="flex flex-col items-left">
-                <h5 className="font-bold text-xl">Doğum Yeri</h5>
-                <p className="text-slate-100 font-medium ">
-                  {cast?.place_of_birth}
-                </p>
-              </li>
-            </ul>
           </div>
         </div>
       </div>

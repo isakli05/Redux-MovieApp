@@ -1,93 +1,75 @@
-import { useEffect } from "react";
-import { Link } from "react-router-dom";
-import { image } from "../../helper";
-import { useAppDispatch, useAppSelector } from "../../redux/store";
-import { fetchTvDetail } from "../../redux/tvShows/tvShowsDetailSlice";
+import { Link, useParams } from 'react-router-dom';
+import { useGetTVSeasonDetailsQuery, useGetTVShowDetailsQuery } from '../../api/endpoints/tv.endpoints';
+import { getPosterUrl, getYear, extractIdFromSlug } from '../../utils';
 
-function TvSeasonBanner({ tv_id }: { tv_id: string }) {
-  const tv_season = useAppSelector((state) => state.tvSeasons.data);
-  const tv_season_detail = useAppSelector((state) => state.tvDetails.data);
-  const dispatch = useAppDispatch();
-  useEffect(() => {
-    dispatch(fetchTvDetail(tv_id));
-  }, []);
+function TvSeasonBanner() {
+  const { tv_id, season_number } = useParams<{ tv_id: string; season_number: string }>();
+  const tvId = extractIdFromSlug(tv_id);
+
+  const { data: seasonDetail } = useGetTVSeasonDetailsQuery(
+    { tvId: tvId!, seasonNumber: Number(season_number) },
+    { skip: !tvId || !season_number }
+  );
+
+  const { data: tvDetail } = useGetTVShowDetailsQuery(tvId!, {
+    skip: !tvId,
+  });
 
   return (
     <>
       <div className="flex items-center p-5 h-32 my-5 bg-slate-500">
         <div className="flex items-center lg:ml-11">
-          <Link to={`/tv/${tv_id}/season/${tv_season?.season_number}`}>
+          <Link to={`/tv/${tv_id}/season/${season_number}`}>
             <img
               loading="lazy"
-              className="w-16 mr-2"
-              src={`${
-                tv_season?.poster_path === null
-                  ? "/assets/tv_null.svg"
-                  : `${image}${tv_season?.poster_path}`
-              }`}
-              alt={tv_season?.name}
+              className="w-16 h-20 object-cover rounded mr-2"
+              src={getPosterUrl(seasonDetail?.poster_path)}
+              alt={seasonDetail?.name}
             />
           </Link>
           <div className="ml-2">
-            <div className="flex space-x-2">
-              <Link to={`/tv/${tv_id}/season/${tv_season?.season_number}`}>
-                <h3 className="font-semibold text-3xl text-gray-100 hover:text-gray-300">
-                  {tv_season?.name}{" "}
+            <div className="flex gap-2">
+              <Link to={`/tv/${tv_id}/season/${season_number}`}>
+                <h3 className="font-semibold text-xl md:text-3xl text-gray-100 hover:text-gray-300">
+                  {seasonDetail?.name}
                 </h3>
               </Link>
-              <h5 className="text-3xl font-thin text-gray-100">
-                {tv_season?.air_date
-                  ? "(" + tv_season?.air_date?.slice(0, 4) + ")"
-                  : ""}
-              </h5>
+              {seasonDetail?.air_date && (
+                <h5 className="text-xl md:text-3xl font-light text-gray-100">
+                  ({getYear(seasonDetail.air_date)})
+                </h5>
+              )}
             </div>
             <Link to={`/tv/${tv_id}/seasons`}>
-              <span className="text-gray-100 hover:text-slate-300">
-                <i className="fa-solid fa-arrow-left mr-2 text-sm "></i>Sezon
-                Listesine Dön
+              <span className="text-gray-100 hover:text-slate-300 text-sm md:text-base">
+                <i className="fa-solid fa-arrow-left mr-2 text-sm"></i>
+                Sezon Listesine Dön
               </span>
             </Link>
           </div>
         </div>
       </div>
 
-      <div className="border-b flex justify-between">
-        <div className="ml-10">
-          {tv_season_detail?.seasons[0].name === "Specials" &&
-          tv_season?.season_number! !== 0 ? (
-            <Link
-              to={`/tv/${tv_id}/season/${tv_season_detail?.seasons[0].season_number}`}
-            >
-              {" "}
-              <h3 className="text-slate-300 hover:text-slate-100 text-lg mb-3">
-                <i className="fa-solid fa-arrow-left mr-2 text-sm "></i>
-                {tv_season_detail?.seasons[0].name}{" "}
+      {/* Navigation */}
+      <div className="border-b border-slate-700 flex justify-between px-10 py-3">
+        <div>
+          {Number(season_number) > 1 && (
+            <Link to={`/tv/${tv_id}/season/${Number(season_number) - 1}`}>
+              <h3 className="text-slate-300 hover:text-slate-100 text-lg">
+                <i className="fa-solid fa-arrow-left mr-2 text-sm"></i>
+                Sezon {Number(season_number) - 1}
               </h3>
             </Link>
-          ) : tv_season?.season_number! > 1 ? (
-            <Link to={`/tv/${tv_id}/season/${tv_season?.season_number! - 1}`}>
-              {" "}
-              <h3 className="text-slate-300 hover:text-slate-100 text-lg mb-3">
-                <i className="fa-solid fa-arrow-left mr-2 text-sm "></i>Sezon{" "}
-                {tv_season?.season_number! - 1}
-              </h3>
-            </Link>
-          ) : (
-            ""
           )}
         </div>
-        <div className="mr-10 ">
-          {tv_season?.season_number! < tv_season_detail?.seasons.length! &&
-          tv_season_detail?.seasons[0].name !== "Specials" ? (
-            <Link to={`/tv/${tv_id}/season/${tv_season?.season_number! + 1}`}>
-              {" "}
-              <h3 className="text-slate-300 hover:text-slate-100 text-lg mb-3">
-                Sezon {tv_season?.season_number! + 1}{" "}
-                <i className="fa-solid fa-arrow-right mr-2 text-sm text-slate-300"></i>
+        <div>
+          {tvDetail && Number(season_number) < tvDetail.number_of_seasons && (
+            <Link to={`/tv/${tv_id}/season/${Number(season_number) + 1}`}>
+              <h3 className="text-slate-300 hover:text-slate-100 text-lg">
+                Sezon {Number(season_number) + 1}
+                <i className="fa-solid fa-arrow-right ml-2 text-sm"></i>
               </h3>
             </Link>
-          ) : (
-            ""
           )}
         </div>
       </div>
