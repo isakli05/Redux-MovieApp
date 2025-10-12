@@ -16,6 +16,7 @@ export const getImageUrl = (
     return type === 'profile' ? DEFAULT_IMAGES.PROFILE : DEFAULT_IMAGES.POSTER;
   }
 
+  // TMDB path'ler zaten / ile başlar, bu yüzden extra slash eklenmemeli
   return `${TMDB_CONFIG.IMAGE_BASE_URL}/${size}${path}`;
 };
 
