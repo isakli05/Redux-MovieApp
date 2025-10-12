@@ -2,3 +2,115 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Modern Custom Scrollbar - Global */
+@layer base {
+  /* Firefox */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(6, 182, 212, 0.5) rgba(15, 23, 42, 0.3);
+  }
+
+  /* Webkit (Chrome, Safari, Edge) */
+  *::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  *::-webkit-scrollbar-track {
+    background: rgba(15, 23, 42, 0.3);
+    border-radius: 10px;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, rgba(6, 182, 212, 0.6), rgba(59, 130, 246, 0.6));
+    border-radius: 10px;
+    border: 2px solid rgba(15, 23, 42, 0.3);
+    transition: all 0.3s ease;
+  }
+
+  *::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, rgba(6, 182, 212, 0.9), rgba(59, 130, 246, 0.9));
+    border-color: rgba(6, 182, 212, 0.3);
+  }
+
+  *::-webkit-scrollbar-thumb:active {
+    background: linear-gradient(180deg, rgb(6, 182, 212), rgb(59, 130, 246));
+  }
+
+  /* Scrollbar Corner */
+  *::-webkit-scrollbar-corner {
+    background: rgba(15, 23, 42, 0.3);
+  }
+
+  /* Smooth Scrolling */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Body Scrollbar - Slightly Wider */
+  body::-webkit-scrollbar {
+    width: 12px;
+  }
+
+  body::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, rgba(6, 182, 212, 0.7), rgba(59, 130, 246, 0.7));
+  }
+}
+
+/* Custom Scrollbar Variants */
+@layer utilities {
+  /* Thin Scrollbar */
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  /* Hide Scrollbar */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Orange Scrollbar for Trending */
+  .scrollbar-orange::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, rgba(249, 115, 22, 0.6), rgba(239, 68, 68, 0.6));
+  }
+
+  .scrollbar-orange::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, rgba(249, 115, 22, 0.9), rgba(239, 68, 68, 0.9));
+  }
+
+  /* Green Scrollbar for Free */
+  .scrollbar-green::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, rgba(34, 197, 94, 0.6), rgba(16, 185, 129, 0.6));
+  }
+
+  .scrollbar-green::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, rgba(34, 197, 94, 0.9), rgba(16, 185, 129, 0.9));
+  }
+}
+
+/* Loading Animation */
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite linear;
+  background: linear-gradient(
+    to right,
+    rgba(30, 41, 59, 0.5) 0%,
+    rgba(51, 65, 85, 0.8) 50%,
+    rgba(30, 41, 59, 0.5) 100%
+  );
+  background-size: 1000px 100%;
+}

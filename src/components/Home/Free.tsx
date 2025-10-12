@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { StarIcon, PlayIcon, GiftIcon } from '@heroicons/react/24/solid';
+import { GiftIcon } from '@heroicons/react/24/solid';
 import { useGetFreeMoviesQuery } from '../../api/endpoints/movies.endpoints';
 import { useGetFreeTVShowsQuery } from '../../api/endpoints/tv.endpoints';
-import { getPosterUrl, createSlug, formatDate } from '../../utils';
+import MovieCarousel from '../Carousel/MovieCarousel';
+import '../Carousel/carousel.css';
 
 type MediaType = 'movie' | 'tv';
 
@@ -33,7 +33,7 @@ function Free() {
   const results = type === 'movie' ? freeMovies?.results : freeTVShows?.results;
 
   return (
-    <section className="relative">
+    <section className="relative carousel-green">
       {/* Section Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <div className="space-y-2">
@@ -66,80 +66,13 @@ function Free() {
         </div>
       </div>
 
-      {/* Content Grid */}
-      {isLoading ? (
-        <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-slate-600 scrollbar-track-slate-800/50">
-          {Array.from({ length: 10 }).map((_, index) => (
-            <div key={index} className="flex-shrink-0 w-48 animate-pulse">
-              <div className="aspect-[2/3] bg-slate-700/50 rounded-xl mb-3" />
-              <div className="h-4 bg-slate-700/50 rounded w-3/4 mb-2" />
-              <div className="h-3 bg-slate-700/50 rounded w-1/2" />
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-green-500/50 scrollbar-track-slate-800/50">
-          {results?.map((item: any) => {
-            const title = type === 'tv' ? item.name : item.title;
-            const originalTitle = type === 'tv' ? item.original_name : item.original_title;
-            const releaseDate = type === 'tv' ? item.first_air_date : item.release_date;
-
-            return (
-              <Link
-                key={item.id}
-                to={`/${type}/${createSlug(item.id, originalTitle)}`}
-                className="group flex-shrink-0 w-48"
-              >
-                <div className="relative">
-                  {/* Card */}
-                  <div className="relative aspect-[2/3] rounded-xl overflow-hidden mb-3 shadow-xl">
-                    {/* Free Badge */}
-                    <div className="absolute top-2 left-2 z-10 px-2 py-1 bg-green-500 text-white text-xs font-bold rounded-lg flex items-center gap-1">
-                      <GiftIcon className="h-3 w-3" />
-                      ÜCRETSİZ
-                    </div>
-
-                    {/* Rating Badge */}
-                    <div className="absolute top-2 right-2 z-10 flex items-center gap-1 px-2 py-1 bg-black/70 backdrop-blur-sm rounded-lg">
-                      <StarIcon className="h-4 w-4 text-yellow-400" />
-                      <span className="text-white text-sm font-bold">
-                        {item.vote_average.toFixed(1)}
-                      </span>
-                    </div>
-
-                    {/* Hover Overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="bg-green-500/90 backdrop-blur-sm p-4 rounded-full transform scale-0 group-hover:scale-100 transition-transform duration-300">
-                          <PlayIcon className="h-8 w-8 text-white" />
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Poster */}
-                    <img
-                      loading="lazy"
-                      src={getPosterUrl(item.poster_path)}
-                      alt={title}
-                      className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"
-                    />
-                  </div>
-
-                  {/* Info */}
-                  <div className="space-y-1">
-                    <h3 className="font-semibold text-white group-hover:text-green-400 transition-colors line-clamp-2 leading-tight">
-                      {title}
-                    </h3>
-                    <p className="text-sm text-slate-400">
-                      {formatDate(releaseDate, { year: 'numeric' })}
-                    </p>
-                  </div>
-                </div>
-              </Link>
-            );
-          })}
-        </div>
-      )}
+      {/* Content Carousel */}
+      <MovieCarousel
+        movies={results || []}
+        isLoading={isLoading}
+        mediaType={type}
+        color="green"
+      />
     </section>
   );
 }

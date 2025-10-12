@@ -1,0 +1,60 @@
+/* Modern Carousel Styles */
+
+.movie-carousel {
+  padding-bottom: 3rem;
+  position: relative;
+}
+
+/* Swiper Pagination */
+.movie-carousel .swiper-pagination {
+  bottom: 0 !important;
+}
+
+.movie-carousel .swiper-pagination-bullet {
+  width: 8px;
+  height: 8px;
+  background: rgba(148, 163, 184, 0.5);
+  opacity: 1;
+  transition: all 0.3s ease;
+}
+
+.movie-carousel .swiper-pagination-bullet-active {
+  background: linear-gradient(90deg, rgb(6, 182, 212), rgb(59, 130, 246));
+  width: 24px;
+  border-radius: 4px;
+}
+
+/* Orange theme pagination */
+.carousel-orange .swiper-pagination-bullet-active {
+  background: linear-gradient(90deg, rgb(249, 115, 22), rgb(239, 68, 68));
+}
+
+/* Green theme pagination */
+.carousel-green .swiper-pagination-bullet-active {
+  background: linear-gradient(90deg, rgb(34, 197, 94), rgb(16, 185, 129));
+}
+
+/* Navigation Buttons Hover Effects */
+.swiper-button-prev-custom:hover,
+.swiper-button-next-custom:hover {
+  transform: translateY(-50%) scale(1.1);
+}
+
+/* Hide buttons on mobile */
+@media (max-width: 640px) {
+  .swiper-button-prev-custom,
+  .swiper-button-next-custom {
+    display: none;
+  }
+}
+
+/* Smooth slide transitions */
+.movie-carousel .swiper-slide {
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.movie-carousel .swiper-slide-active {
+  transform: scale(1);
+  opacity: 1;
+}
+
