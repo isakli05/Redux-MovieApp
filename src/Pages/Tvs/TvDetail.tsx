@@ -15,6 +15,7 @@ import { extractIdFromSlug, getPosterUrl, getBackdropUrl, getYear, formatDate } 
 import TvCredits from '../../components/Tvs/TvCredit';
 import TvLabel from '../../components/Tvs/TvLabel';
 import TvSeasonsBackdrops from '../../components/Tvs/TvSeasonsBackdrops';
+import TvTrailer from '../../components/Tvs/TvTrailer';
 import { languages } from '../../languages-list';
 import Loading from '../../components/Loading';
 
@@ -147,6 +148,9 @@ function TvDetail() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Column */}
           <div className="lg:col-span-2 space-y-12">
+            {/* Trailer */}
+            <TvTrailer id={id} />
+
             {/* Cast */}
             <section>
               <TvCredits id={id} />

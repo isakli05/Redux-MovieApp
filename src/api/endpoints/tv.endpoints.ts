@@ -8,6 +8,7 @@ import type { Tvs } from '../../types/tvs';
 import type { TvDetails } from '../../types/tvsDetails';
 import type { TvCredits } from '../../types/tvCredits';
 import type { TvSeasons } from '../../types/tvSeasons';
+import type { VideosResponse } from '../../types/videos';
 import { TMDB_CONFIG } from '../../utils/constants';
 
 const API_KEY = TMDB_CONFIG.API_KEY;
@@ -99,6 +100,13 @@ export const tvApi = tmdbApi.injectEndpoints({
       query: () => 
         `/discover/tv?api_key=${API_KEY}&watch_region=US&with_watch_monetization_types=free`,
     }),
+
+    // Dizi videoları (fragmanlar, teaser'lar vb.)
+    getTVShowVideos: builder.query<VideosResponse, string>({
+      query: (tvId) => 
+        `/tv/${tvId}/videos?api_key=${API_KEY}&language=${LANGUAGE}`,
+      providesTags: (result, error, id) => [{ type: 'TV', id: `videos-${id}` }],
+    }),
   }),
 });
 
@@ -116,5 +124,6 @@ export const {
   useGetTVShowsByKeywordQuery,
   useDiscoverTVShowsQuery,
   useGetFreeTVShowsQuery,
+  useGetTVShowVideosQuery,
 } = tvApi;
 

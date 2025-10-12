@@ -8,6 +8,7 @@ import type { Movies } from '../../types/Movies';
 import type { MovieDetails } from '../../types/movieDetails';
 import type { MovieCredits } from '../../types/movieCredits';
 import type { MovieCollect } from '../../types/movieCollect';
+import type { VideosResponse } from '../../types/videos';
 import { TMDB_CONFIG } from '../../utils/constants';
 
 const API_KEY = TMDB_CONFIG.API_KEY;
@@ -98,6 +99,13 @@ export const moviesApi = tmdbApi.injectEndpoints({
       query: (timeWindow = 'day') => 
         `/trending/all/${timeWindow}?api_key=${API_KEY}`,
     }),
+
+    // Film videoları (fragmanlar, teaser'lar vb.)
+    getMovieVideos: builder.query<VideosResponse, string>({
+      query: (movieId) => 
+        `/movie/${movieId}/videos?api_key=${API_KEY}&language=${LANGUAGE}`,
+      providesTags: (result, error, id) => [{ type: 'Movie', id: `videos-${id}` }],
+    }),
   }),
 });
 
@@ -115,5 +123,6 @@ export const {
   useDiscoverMoviesQuery,
   useGetFreeMoviesQuery,
   useGetTrendingQuery,
+  useGetMovieVideosQuery,
 } = moviesApi;
 

@@ -10,4 +10,5 @@ export { tmdbApi } from './tmdb.api';
 export * from './endpoints/movies.endpoints';
 export * from './endpoints/tv.endpoints';
 export * from './endpoints/persons.endpoints';
+export * from './endpoints/search.endpoints';
 

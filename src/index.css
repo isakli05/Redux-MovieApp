@@ -92,6 +92,25 @@
   .scrollbar-green::-webkit-scrollbar-thumb:hover {
     background: linear-gradient(180deg, rgba(34, 197, 94, 0.9), rgba(16, 185, 129, 0.9));
   }
+
+  /* Custom Scrollbar for Search Results */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: rgba(15, 23, 42, 0.5);
+    border-radius: 10px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, rgba(6, 182, 212, 0.7), rgba(59, 130, 246, 0.7));
+    border-radius: 10px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, rgba(6, 182, 212, 1), rgba(59, 130, 246, 1));
+  }
 }
 
 /* Loading Animation */
@@ -113,4 +132,91 @@
     rgba(30, 41, 59, 0.5) 100%
   );
   background-size: 1000px 100%;
+}
+
+/* Person Movies Swiper Styles */
+.person-movies-swiper {
+  padding: 20px 0 50px 0 !important;
+  margin: 0 -30px !important;
+  padding-left: 30px !important;
+  padding-right: 30px !important;
+}
+
+.person-movies-swiper .swiper-button-next,
+.person-movies-swiper .swiper-button-prev {
+  width: 36px;
+  height: 36px;
+  background: rgba(30, 41, 59, 0.95);
+  backdrop-filter: blur(12px);
+  border-radius: 50%;
+  border: 1.5px solid rgba(100, 116, 139, 0.4);
+  transition: all 0.3s ease;
+  z-index: 10;
+}
+
+.person-movies-swiper .swiper-button-next {
+  right: 5px;
+}
+
+.person-movies-swiper .swiper-button-prev {
+  left: 5px;
+}
+
+.person-movies-swiper .swiper-button-next:hover,
+.person-movies-swiper .swiper-button-prev:hover {
+  background: rgba(6, 182, 212, 0.95);
+  border-color: rgba(6, 182, 212, 0.8);
+  transform: scale(1.1);
+  box-shadow: 0 0 15px rgba(6, 182, 212, 0.4);
+}
+
+/* Swiper SVG ikonlarını küçült */
+.person-movies-swiper .swiper-button-next svg,
+.person-movies-swiper .swiper-button-prev svg {
+  width: 8px !important;
+  height: 14px !important;
+}
+
+/* ::after içeriğini kaldır, sadece SVG kullan */
+.person-movies-swiper .swiper-button-next::after,
+.person-movies-swiper .swiper-button-prev::after {
+  display: none !important;
+}
+
+.person-movies-swiper .swiper-button-disabled {
+  opacity: 0.2;
+  cursor: not-allowed;
+}
+
+.person-movies-swiper .swiper-button-disabled:hover {
+  transform: scale(1);
+  background: rgba(30, 41, 59, 0.95);
+  border-color: rgba(100, 116, 139, 0.4);
+  box-shadow: none;
+}
+
+.person-movies-swiper .swiper-pagination {
+  bottom: 10px !important;
+}
+
+.person-movies-swiper .swiper-pagination-bullet {
+  width: 8px;
+  height: 8px;
+  background: rgba(148, 163, 184, 0.4);
+  opacity: 1;
+  transition: all 0.3s ease;
+}
+
+.person-movies-swiper .swiper-pagination-bullet-active {
+  background: linear-gradient(90deg, rgba(6, 182, 212, 1), rgba(59, 130, 246, 1));
+  width: 24px;
+  border-radius: 4px;
+}
+
+/* Mobilde navigation butonlarını gizle */
+@media (max-width: 640px) {
+  .person-movies-swiper .swiper-button-next,
+  .person-movies-swiper .swiper-button-prev {
+    display: none;
+  }
 }

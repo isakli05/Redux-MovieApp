@@ -1,5 +1,5 @@
-import { Fragment, useState } from 'react';
-import { Disclosure, Menu, Transition } from '@headlessui/react';
+import { Fragment, useState, useEffect } from 'react';
+import { Disclosure, Menu, Transition, Dialog } from '@headlessui/react';
 import {
   Bars3Icon,
   XMarkIcon,
@@ -11,6 +11,7 @@ import {
   HomeIcon,
 } from '@heroicons/react/24/outline';
 import { Link, useLocation } from 'react-router-dom';
+import SearchBar from './Search/SearchBar';
 
 // Navigation yapısı
 const navigation = {
@@ -42,10 +43,23 @@ const navigation = {
 function Navbar() {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
 
   const isActive = (path: string) => {
     return location.pathname === path || location.pathname.startsWith(path + '/');
   };
+
+  // Keyboard shortcut (Ctrl/Cmd + K)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setSearchOpen(true);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   return (
     <Disclosure as="nav" className="fixed top-0 left-0 right-0 z-50">
@@ -227,10 +241,31 @@ function Navbar() {
                       </Menu.Items>
                     </Transition>
                   </Menu>
+
+                  {/* Search Button - Desktop */}
+                  <button
+                    onClick={() => setSearchOpen(true)}
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg text-gray-300 hover:bg-slate-700/50 hover:text-white transition-all duration-200 group"
+                  >
+                    <MagnifyingGlassIcon className="h-5 w-5" />
+                    <span className="text-sm text-gray-400">Ara...</span>
+                    <kbd className="hidden lg:inline-flex items-center gap-1 px-2 py-1 text-xs bg-slate-700/50 rounded border border-slate-600 text-gray-400">
+                      <span className="text-xs">⌘</span>K
+                    </kbd>
+                  </button>
                 </div>
 
                 {/* Mobile menu button */}
-                <div className="md:hidden">
+                <div className="md:hidden flex items-center gap-2">
+                  {/* Search Button - Mobile */}
+                  <button
+                    type="button"
+                    className="inline-flex items-center justify-center rounded-lg p-2 text-gray-400 hover:bg-slate-700/50 hover:text-white focus:outline-none focus:ring-2 focus:ring-inset focus:ring-cyan-500 transition-colors"
+                    onClick={() => setSearchOpen(true)}
+                  >
+                    <span className="sr-only">Arama</span>
+                    <MagnifyingGlassIcon className="block h-6 w-6" aria-hidden="true" />
+                  </button>
                   <button
                     type="button"
                     className="inline-flex items-center justify-center rounded-lg p-2 text-gray-400 hover:bg-slate-700/50 hover:text-white focus:outline-none focus:ring-2 focus:ring-inset focus:ring-cyan-500 transition-colors"
@@ -343,6 +378,41 @@ function Navbar() {
               </Disclosure.Panel>
             </Transition>
           </div>
+
+          {/* Search Modal */}
+          <Transition appear show={searchOpen} as={Fragment}>
+            <Dialog as="div" className="relative z-[60]" onClose={() => setSearchOpen(false)}>
+              <Transition.Child
+                as={Fragment}
+                enter="ease-out duration-300"
+                enterFrom="opacity-0"
+                enterTo="opacity-100"
+                leave="ease-in duration-200"
+                leaveFrom="opacity-100"
+                leaveTo="opacity-0"
+              >
+                <div className="fixed inset-0 bg-black/70 backdrop-blur-sm" />
+              </Transition.Child>
+
+              <div className="fixed inset-0 overflow-y-auto">
+                <div className="flex min-h-full items-start justify-center p-4 pt-[8vh] sm:pt-[12vh]">
+                  <Transition.Child
+                    as={Fragment}
+                    enter="ease-out duration-300"
+                    enterFrom="opacity-0 scale-95 -translate-y-4"
+                    enterTo="opacity-100 scale-100 translate-y-0"
+                    leave="ease-in duration-200"
+                    leaveFrom="opacity-100 scale-100 translate-y-0"
+                    leaveTo="opacity-0 scale-95 -translate-y-4"
+                  >
+                    <Dialog.Panel className="w-full max-w-4xl transform overflow-visible transition-all bg-slate-900/95 backdrop-blur-xl border border-slate-700/50 rounded-2xl shadow-2xl p-6 sm:p-8">
+                      <SearchBar onClose={() => setSearchOpen(false)} />
+                    </Dialog.Panel>
+                  </Transition.Child>
+                </div>
+              </div>
+            </Dialog>
+          </Transition>
         </>
       )}
     </Disclosure>

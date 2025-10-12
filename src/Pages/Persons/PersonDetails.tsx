@@ -10,6 +10,7 @@ import {
 import { useGetPersonDetailsQuery } from '../../api/endpoints/persons.endpoints';
 import { getProfileUrl, formatDate } from '../../utils';
 import Loading from '../../components/Loading';
+import PersonMovies from '../../components/Persons/PersonMovies';
 
 function PersonDetails() {
   const { cast_id } = useParams();
@@ -206,6 +207,18 @@ function PersonDetails() {
               )}
             </div>
           </div>
+
+          {/* Filmography Section */}
+          {(cast.movie_credits || cast.tv_credits) && (
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+              <PersonMovies
+                movieCredits={cast.movie_credits?.cast}
+                tvCredits={cast.tv_credits?.cast}
+                personName={cast.name}
+                isMale={cast.gender === 2}
+              />
+            </div>
+          )}
         </div>
       </div>
     </div>

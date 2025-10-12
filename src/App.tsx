@@ -24,6 +24,7 @@ import TvKeyList from './Pages/Tvs/TvKeyList';
 import TvSeasonDetail from './Pages/Tvs/TvSeasonDetail';
 import TvSeasonsList from './Pages/Tvs/TvSeasonsList';
 import Navbar from './components/Navbar';
+import Search from './Pages/Search';
 
 function App() {
   return (
@@ -33,6 +34,7 @@ function App() {
       <main className="flex-grow pt-16">
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/search" element={<Search />} />
 
           <Route path="/movie">
             <Route index element={<Movies />} />
