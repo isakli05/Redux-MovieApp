@@ -11,4 +11,6 @@ export * from './endpoints/movies.endpoints';
 export * from './endpoints/tv.endpoints';
 export * from './endpoints/persons.endpoints';
 export * from './endpoints/search.endpoints';
+export * from './endpoints/auth.endpoints';
+export * from './endpoints/lists.endpoints';
 

@@ -25,6 +25,8 @@ import TvSeasonDetail from './Pages/Tvs/TvSeasonDetail';
 import TvSeasonsList from './Pages/Tvs/TvSeasonsList';
 import Navbar from './components/Navbar';
 import Search from './Pages/Search';
+import Lists from './Pages/Lists';
+import AuthCallback from './Pages/AuthCallback';
 
 function App() {
   return (
@@ -35,6 +37,8 @@ function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/search" element={<Search />} />
+          <Route path="/lists" element={<Lists />} />
+          <Route path="/auth/callback" element={<AuthCallback />} />
 
           <Route path="/movie">
             <Route index element={<Movies />} />

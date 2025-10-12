@@ -7,12 +7,15 @@ import {
   SparklesIcon 
 } from '@heroicons/react/24/outline';
 import Loading from '../components/Loading';
+import { useAuth } from '../hooks/useAuth';
 
 const Popular = React.lazy(() => import('../components/Home/Popular'));
 const Free = React.lazy(() => import('../components/Home/Free'));
 const Trending = React.lazy(() => import('../components/Home/Trending'));
 
 function Home() {
+  const { isAuthenticated, user, login } = useAuth();
+
   return (
     <div className="bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 min-h-screen">
       {/* Hero Section */}
@@ -50,18 +53,43 @@ function Home() {
             <div className="flex flex-wrap justify-center gap-4 pt-6">
               <Link
                 to="/movie"
-                className="group flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl font-semibold text-white shadow-lg hover:shadow-cyan-500/50 transition-all duration-300 hover:scale-105"
+                className="group flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl font-semibold text-white shadow-lg hover:shadow-cyan-500/50 transition-all duration-300 hover:brightness-110"
               >
                 <FilmIcon className="h-5 w-5" />
                 Filmleri Keşfet
               </Link>
               <Link
                 to="/tv"
-                className="group flex items-center gap-2 px-6 py-3 bg-slate-800/50 backdrop-blur-lg border border-slate-700/50 rounded-xl font-semibold text-white hover:bg-slate-700/50 transition-all duration-300 hover:scale-105"
+                className="group flex items-center gap-2 px-6 py-3 bg-slate-800/50 backdrop-blur-lg border border-slate-700/50 rounded-xl font-semibold text-white hover:bg-slate-700/50 transition-all duration-300 hover:brightness-110"
               >
                 <TvIcon className="h-5 w-5" />
                 Dizileri Keşfet
               </Link>
+
+              {/* Login Button */}
+              {!isAuthenticated && (
+                <button
+                  onClick={login}
+                  className="group flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl font-semibold text-white shadow-lg hover:shadow-green-500/50 transition-all duration-300 hover:brightness-110"
+                >
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                  </svg>
+                  TMDB ile Giriş Yap
+                </button>
+              )}
+
+              {isAuthenticated && (
+                <Link
+                  to="/lists"
+                  className="group flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-xl font-semibold text-white shadow-lg hover:shadow-indigo-500/50 transition-all duration-300 hover:brightness-110"
+                >
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                  </svg>
+                  Listelerim
+                </Link>
+              )}
             </div>
           </div>
         </div>

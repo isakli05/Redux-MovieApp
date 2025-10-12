@@ -13,10 +13,10 @@ const LANGUAGE = TMDB_CONFIG.LANGUAGE;
 
 export const personsApi = tmdbApi.injectEndpoints({
   endpoints: (builder) => ({
-    // Popüler kişiler
+    // Popüler kişiler - v3 API Key ile
     getPopularPersons: builder.query<PopularPersons, number | void>({
       query: (page = 1) => 
-        `/person/popular?api_key=${API_KEY}&language=${LANGUAGE}&page=${page}`,
+        `/person/popular?language=${LANGUAGE}&page=${page}`,
       providesTags: (result) => 
         result 
           ? [
@@ -26,29 +26,29 @@ export const personsApi = tmdbApi.injectEndpoints({
           : [{ type: 'Person', id: 'PARTIAL-LIST' }],
     }),
 
-    // Kişi detayı
+    // Kişi detayı - v3 API Key ile
     getPersonDetails: builder.query<PersonDetail, string>({
       query: (personId) => 
-        `/person/${personId}?api_key=${API_KEY}&language=${LANGUAGE}&append_to_response=movie_credits,tv_credits,images,external_ids`,
+        `/person/${personId}?language=${LANGUAGE}&append_to_response=movie_credits,tv_credits,images,external_ids`,
       providesTags: (result, error, id) => [{ type: 'PersonDetail', id }],
     }),
 
-    // Kişinin film kredileri
+    // Kişinin film kredileri - v3 API Key ile
     getPersonMovieCredits: builder.query<any, string>({
       query: (personId) => 
-        `/person/${personId}/movie_credits?api_key=${API_KEY}&language=${LANGUAGE}`,
+        `/person/${personId}/movie_credits?language=${LANGUAGE}`,
     }),
 
-    // Kişinin TV kredileri
+    // Kişinin TV kredileri - v3 API Key ile
     getPersonTVCredits: builder.query<any, string>({
       query: (personId) => 
-        `/person/${personId}/tv_credits?api_key=${API_KEY}&language=${LANGUAGE}`,
+        `/person/${personId}/tv_credits?language=${LANGUAGE}`,
     }),
 
-    // Kişi araması
+    // Kişi araması - v3 API Key ile
     searchPersons: builder.query<PopularPersons, { query: string; page?: number }>({
       query: ({ query, page = 1 }) => 
-        `/search/person?api_key=${API_KEY}&language=${LANGUAGE}&query=${encodeURIComponent(query)}&page=${page}`,
+        `/search/person?language=${LANGUAGE}&query=${encodeURIComponent(query)}&page=${page}`,
     }),
   }),
 });

@@ -9,9 +9,11 @@ import {
   ChevronDownIcon,
   MagnifyingGlassIcon,
   HomeIcon,
+  ListBulletIcon,
 } from '@heroicons/react/24/outline';
 import { Link, useLocation } from 'react-router-dom';
 import SearchBar from './Search/SearchBar';
+import { useAuth } from '../hooks/useAuth';
 
 // Navigation yapısı
 const navigation = {
@@ -44,6 +46,7 @@ function Navbar() {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const { user, isAuthenticated, login, logout } = useAuth();
 
   const isActive = (path: string) => {
     return location.pathname === path || location.pathname.startsWith(path + '/');
@@ -100,6 +103,20 @@ function Navbar() {
                     <HomeIcon className="h-5 w-5" />
                     <span className="font-medium">Ana Sayfa</span>
                   </Link>
+
+                  {/* Lists Link - v4 Yeni Özellik */}
+                  <Link
+                    to="/lists"
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 ${
+                      location.pathname === '/lists'
+                        ? 'bg-cyan-500/20 text-cyan-400'
+                        : 'text-gray-300 hover:bg-slate-700/50 hover:text-white'
+                    }`}
+                  >
+                    <ListBulletIcon className="h-5 w-5" />
+                    <span className="font-medium">Listelerim</span>
+                  </Link>
+
 
                   {/* Movies Dropdown */}
                   <Menu as="div" className="relative">
@@ -253,6 +270,28 @@ function Navbar() {
                       <span className="text-xs">⌘</span>K
                     </kbd>
                   </button>
+
+                  {/* Auth Section - Desktop */}
+                  {isAuthenticated ? (
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm text-gray-300">
+                        Merhaba, {user?.name || user?.username || 'Kullanıcı'}
+                      </span>
+                      <button
+                        onClick={logout}
+                        className="px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-slate-700/50 rounded-lg transition-all duration-200"
+                      >
+                        Çıkış
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={login}
+                      className="px-4 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 transition-all duration-200 text-sm font-medium"
+                    >
+                      Giriş Yap
+                    </button>
+                  )}
                 </div>
 
                 {/* Mobile menu button */}
@@ -308,6 +347,21 @@ function Navbar() {
                     <HomeIcon className="h-5 w-5" />
                     Ana Sayfa
                   </Link>
+
+                  {/* Lists - v4 Yeni Özellik */}
+                  <Link
+                    to="/lists"
+                    className={`flex items-center gap-3 px-3 py-3 rounded-lg text-base font-medium transition-colors ${
+                      location.pathname === '/lists'
+                        ? 'bg-cyan-500/20 text-cyan-400'
+                        : 'text-gray-300 hover:bg-slate-700/50 hover:text-white'
+                    }`}
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <ListBulletIcon className="h-5 w-5" />
+                    Listelerim
+                  </Link>
+
 
                   {/* Movies */}
                   <div className="space-y-1">
@@ -373,6 +427,36 @@ function Navbar() {
                         {item.name}
                       </Link>
                     ))}
+                  </div>
+
+                  {/* Auth Section - Mobile */}
+                  <div className="border-t border-slate-700/50 pt-4 mt-4">
+                    {isAuthenticated ? (
+                      <div className="space-y-2">
+                        <div className="px-3 py-2 text-sm text-gray-300">
+                          Merhaba, {user?.name || user?.username || 'Kullanıcı'}
+                        </div>
+                        <button
+                          onClick={() => {
+                            logout();
+                            setMobileMenuOpen(false);
+                          }}
+                          className="w-full text-left px-3 py-2 text-sm text-gray-400 hover:bg-slate-700/50 hover:text-white rounded-lg transition-colors"
+                        >
+                          Çıkış Yap
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => {
+                          login();
+                          setMobileMenuOpen(false);
+                        }}
+                        className="w-full text-left px-3 py-3 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 transition-colors text-sm font-medium"
+                      >
+                        TMDB ile Giriş Yap
+                      </button>
+                    )}
                   </div>
                 </div>
               </Disclosure.Panel>

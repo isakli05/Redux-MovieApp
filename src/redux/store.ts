@@ -6,14 +6,15 @@
 import { configureStore } from '@reduxjs/toolkit';
 import { useDispatch, useSelector, TypedUseSelectorHook } from 'react-redux';
 import { tmdbApi } from '../api/tmdb.api';
+import authReducer from './slices/authSlice';
 
 export const store = configureStore({
   reducer: {
     // RTK Query API reducer
     [tmdbApi.reducerPath]: tmdbApi.reducer,
     
-    // Eğer local state slice'ları olacaksa buraya eklenebilir
-    // Örneğin: favorites, theme, ui state vb.
+    // Auth state
+    auth: authReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(tmdbApi.middleware),
