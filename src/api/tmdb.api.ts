@@ -14,8 +14,10 @@ const rawBaseQuery = fetchBaseQuery({
   },
 });
 
-// Wrap base query to add session_id to authenticated requests
+// Wrap base query to add api_key and session_id to requests
 const baseQuery: typeof rawBaseQuery = async (args, api, extraOptions) => {
+  const isProduction = import.meta.env.PROD;
+  
   // Session ID'yi local storage'dan al
   const savedUser = localStorage.getItem('tmdb_user');
   let sessionId: string | null = null;
@@ -29,17 +31,39 @@ const baseQuery: typeof rawBaseQuery = async (args, api, extraOptions) => {
     }
   }
 
-  // URL'yi düzenle - session_id ekle
+  // URL'yi düzenle - api_key ve session_id ekle
   if (typeof args === 'string') {
-    if (sessionId) {
-      const separator = args.includes('?') ? '&' : '?';
-      args = `${args}${separator}session_id=${sessionId}`;
+    let url = args;
+    const separator = url.includes('?') ? '&' : '?';
+    
+    // Production'da API key ekle (development'ta proxy ekliyor)
+    if (isProduction && TMDB_CONFIG.API_KEY) {
+      url = `${url}${separator}api_key=${TMDB_CONFIG.API_KEY}`;
     }
+    
+    // Session ID varsa ekle
+    if (sessionId) {
+      const sep = url.includes('?') ? '&' : '?';
+      url = `${url}${sep}session_id=${sessionId}`;
+    }
+    
+    args = url;
   } else if (args.url) {
-    if (sessionId) {
-      const separator = args.url.includes('?') ? '&' : '?';
-      args.url = `${args.url}${separator}session_id=${sessionId}`;
+    let url = args.url;
+    const separator = url.includes('?') ? '&' : '?';
+    
+    // Production'da API key ekle (development'ta proxy ekliyor)
+    if (isProduction && TMDB_CONFIG.API_KEY) {
+      url = `${url}${separator}api_key=${TMDB_CONFIG.API_KEY}`;
     }
+    
+    // Session ID varsa ekle
+    if (sessionId) {
+      const sep = url.includes('?') ? '&' : '?';
+      url = `${url}${sep}session_id=${sessionId}`;
+    }
+    
+    args = { ...args, url };
   }
 
   return rawBaseQuery(args, api, extraOptions);
