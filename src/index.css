@@ -47,6 +47,11 @@
     scroll-behavior: smooth;
   }
 
+  /* Scroll Restoration için instant scroll */
+  html.scroll-instant {
+    scroll-behavior: auto;
+  }
+
   /* Body Scrollbar - Slightly Wider */
   body::-webkit-scrollbar {
     width: 12px;

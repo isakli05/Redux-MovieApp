@@ -1,4 +1,5 @@
-import { Route, Routes } from 'react-router-dom';
+import { Route, Routes, useLocation } from 'react-router-dom';
+import { useEffect } from 'react';
 import Home from './Pages/Home';
 import Movies from './Pages/Movies/Movies';
 import Person from './Pages/Persons/Persons';
@@ -28,9 +29,31 @@ import Search from './Pages/Search';
 import Lists from './Pages/Lists';
 import AuthCallback from './Pages/AuthCallback';
 
+// Scroll Restoration Bileşeni
+function ScrollToTop() {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    // Sayfa değiştiğinde scroll pozisyonunu hemen en üste götür
+    // Smooth scroll'u geçici olarak devre dışı bırak
+    document.documentElement.classList.add('scroll-instant');
+    window.scrollTo(0, 0);
+    
+    // Kısa bir süre sonra smooth scroll'u tekrar aktif et
+    const timer = setTimeout(() => {
+      document.documentElement.classList.remove('scroll-instant');
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [pathname]);
+
+  return null;
+}
+
 function App() {
   return (
     <div className="flex flex-col min-h-screen bg-slate-900">
+      <ScrollToTop />
       <Navbar />
       {/* pt-16 padding for fixed navbar */}
       <main className="flex-grow pt-16">
