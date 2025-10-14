@@ -1,17 +1,85 @@
-import { useState } from 'react';
+/**
+ * Movies Page - Infinite Scroll Implementation
+ * Accumulated data approach with memory management
+ */
+
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { StarIcon, PlayIcon, CalendarIcon, ArrowPathIcon } from '@heroicons/react/24/solid';
 import { useGetPopularMoviesQuery } from '../../api/endpoints/movies.endpoints';
 import { getPosterUrl, createSlug, formatDate } from '../../utils';
 
+interface Movie {
+  id: number;
+  title: string;
+  original_title: string;
+  poster_path: string;
+  vote_average: number;
+  release_date: string;
+}
+
+const MAX_PAGES_IN_MEMORY = 15; // Max 300 films in DOM
+const ITEMS_PER_PAGE = 20;
+
 function Movies() {
   const [page, setPage] = useState(1);
+  const [accumulatedMovies, setAccumulatedMovies] = useState<Movie[]>([]);
+  const [hasMore, setHasMore] = useState(true);
+  
   const { data: movies, isLoading, isFetching, error } = useGetPopularMoviesQuery(page);
+  
+  const loadMoreRef = useRef<HTMLDivElement>(null);
+  const isInitialLoad = useRef(true);
 
-  const handleLoadMore = () => {
-    if (movies && page < movies.total_pages) {
+  // Accumulate movies from new pages
+  useEffect(() => {
+    if (movies?.results) {
+      setAccumulatedMovies((prev) => {
+        const existingIds = new Set(prev.map(m => m.id));
+        const newMovies = movies.results.filter(m => !existingIds.has(m.id));
+        const updated = [...prev, ...newMovies];
+        
+        // Memory management
+        if (updated.length > MAX_PAGES_IN_MEMORY * ITEMS_PER_PAGE) {
+          return updated.slice(-MAX_PAGES_IN_MEMORY * ITEMS_PER_PAGE);
+        }
+        
+        return updated;
+      });
+      
+      setHasMore(page < movies.total_pages);
+      isInitialLoad.current = false;
+    }
+  }, [movies, page]);
+
+  // Intersection Observer for auto-load (first 5 pages only - Netflix style)
+  useEffect(() => {
+    if (!loadMoreRef.current || !hasMore || isFetching) return;
+    
+    // Auto-load only for first 5 pages (100 items), then show button
+    if (page >= 5) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !isFetching && page < 5) {
+          handleLoadMore();
+        }
+      },
+      { threshold: 0.1, rootMargin: '100px' }
+    );
+
+    observer.observe(loadMoreRef.current);
+    return () => observer.disconnect();
+  }, [hasMore, isFetching, page]);
+
+  const handleLoadMore = useCallback(() => {
+    if (movies && page < movies.total_pages && !isFetching) {
       setPage((prev) => prev + 1);
     }
+  }, [movies, page, isFetching]);
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   if (error) {
@@ -34,20 +102,39 @@ function Movies() {
         <div className="absolute top-0 -right-4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl" />
         
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="flex items-center gap-4">
-            <div className="flex-shrink-0">
-              <div className="bg-gradient-to-br from-cyan-400 to-blue-500 p-3 rounded-xl shadow-lg shadow-cyan-500/50">
-                <StarIcon className="h-8 w-8 text-white" />
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="flex-shrink-0">
+                <div className="bg-gradient-to-br from-cyan-400 to-blue-500 p-3 rounded-xl shadow-lg shadow-cyan-500/50">
+                  <StarIcon className="h-8 w-8 text-white" />
+                </div>
+              </div>
+              <div>
+                <h1 className="text-4xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
+                  Popüler Filmler
+                </h1>
+                <p className="text-slate-400 mt-1">
+                  En çok izlenen ve beğenilen filmler
+                </p>
               </div>
             </div>
-            <div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
-                Popüler Filmler
-              </h1>
-              <p className="text-slate-400 mt-1">
-                En çok izlenen ve beğenilen filmler
-              </p>
-            </div>
+            
+            {/* Stats */}
+            {movies && (
+              <div className="hidden md:flex items-center gap-4 text-sm">
+                <div className="bg-slate-800/50 backdrop-blur-lg border border-slate-700/50 rounded-lg px-4 py-2">
+                  <span className="text-slate-400">Yüklenen: </span>
+                  <span className="text-cyan-400 font-semibold">{accumulatedMovies.length}</span>
+                </div>
+                <div className="bg-slate-800/50 backdrop-blur-lg border border-slate-700/50 rounded-lg px-4 py-2">
+                  <span className="text-slate-400">Toplam: </span>
+                  <span className="text-cyan-400 font-semibold">{movies.total_results.toLocaleString('tr-TR')}</span>
+                </div>
+                <div className="bg-gradient-to-br from-cyan-500/20 to-blue-500/20 backdrop-blur-lg border border-cyan-500/30 rounded-lg px-4 py-2">
+                  <span className="text-cyan-300 font-semibold">∞ Infinite Scroll</span>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -55,11 +142,11 @@ function Movies() {
       {/* Movies Grid */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
-          {isLoading && page === 1 ? (
-            // Skeleton Loader
+          {isLoading && isInitialLoad.current ? (
+            // Skeleton Loader - Initial Load Only
             Array.from({ length: 20 }).map((_, index) => (
               <div
-                key={index}
+                key={`skeleton-${index}`}
                 className="group relative animate-pulse"
               >
                 <div className="aspect-[2/3] bg-slate-700/50 rounded-xl mb-3 animate-shimmer" />
@@ -70,9 +157,9 @@ function Movies() {
               </div>
             ))
           ) : (
-            movies?.results.map((movie) => (
+            accumulatedMovies.map((movie) => (
               <Link
-                key={movie.id}
+                key={`movie-${movie.id}`}
                 to={`/movie/${createSlug(movie.id, movie.original_title)}`}
                 className="group relative"
               >
@@ -132,29 +219,57 @@ function Movies() {
           )}
         </div>
 
-        {/* Load More Button */}
-        {movies && page < movies.total_pages && (
+        {/* Intersection Observer Target (for auto-load first 5 pages) */}
+        <div ref={loadMoreRef} className="h-20" />
+
+        {/* Loading Indicator (auto-loading) */}
+        {isFetching && !isInitialLoad.current && page < 5 && (
+          <div className="flex justify-center mt-8">
+            <div className="flex items-center gap-3 px-6 py-3 bg-slate-800/50 backdrop-blur-lg border border-slate-700/50 rounded-xl">
+              <ArrowPathIcon className="h-5 w-5 text-cyan-400 animate-spin" />
+              <span className="text-white font-medium">Daha fazla film yükleniyor...</span>
+            </div>
+          </div>
+        )}
+
+        {/* Load More Button (Netflix style - after 5 pages) */}
+        {hasMore && page >= 5 && !isFetching && (
           <div className="flex justify-center mt-12">
             <button
-              type="button"
               onClick={handleLoadMore}
-              disabled={isFetching}
-              className="group relative px-8 py-4 bg-slate-800/50 backdrop-blur-lg border border-slate-700/50 rounded-xl font-semibold text-white hover:border-cyan-500/50 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-xl hover:shadow-cyan-500/20"
+              className="group relative px-8 py-4 bg-slate-800/50 backdrop-blur-lg border border-slate-700/50 rounded-xl font-semibold text-white hover:border-cyan-500/50 transition-all duration-300 shadow-xl hover:shadow-cyan-500/20"
             >
               <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 to-blue-500/10 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               <div className="relative flex items-center gap-3">
-                {isFetching ? (
-                  <>
-                    <ArrowPathIcon className="h-5 w-5 animate-spin" />
-                    <span>Yükleniyor...</span>
-                  </>
-                ) : (
-                  <>
-                    <span>Daha Fazla Yükle</span>
-                    <ArrowPathIcon className="h-5 w-5 group-hover:rotate-180 transition-transform duration-300" />
-                  </>
-                )}
+                <span>Daha Fazla Film Yükle</span>
+                <ArrowPathIcon className="h-5 w-5 group-hover:rotate-180 transition-transform duration-300" />
               </div>
+            </button>
+          </div>
+        )}
+
+        {/* Loading Indicator (manual loading) */}
+        {isFetching && page >= 5 && (
+          <div className="flex justify-center mt-8">
+            <div className="flex items-center gap-3 px-6 py-3 bg-slate-800/50 backdrop-blur-lg border border-slate-700/50 rounded-xl">
+              <ArrowPathIcon className="h-5 w-5 text-cyan-400 animate-spin" />
+              <span className="text-white font-medium">Yükleniyor...</span>
+            </div>
+          </div>
+        )}
+
+        {/* End of List */}
+        {!hasMore && accumulatedMovies.length > 0 && (
+          <div className="text-center mt-12 space-y-4">
+            <div className="inline-flex items-center gap-2 px-6 py-3 bg-slate-800/50 backdrop-blur-lg border border-slate-700/50 rounded-xl">
+              <span className="text-slate-400">🎬</span>
+              <span className="text-white font-medium">Tüm filmler görüntülendi</span>
+            </div>
+            <button
+              onClick={scrollToTop}
+              className="block mx-auto px-6 py-2 text-cyan-400 hover:text-cyan-300 transition-colors"
+            >
+              ↑ Başa Dön
             </button>
           </div>
         )}
@@ -162,10 +277,23 @@ function Movies() {
         {/* Page Info */}
         {movies && (
           <div className="text-center mt-6 text-slate-400 text-sm">
-            Sayfa {page} / {movies.total_pages.toLocaleString('tr-TR')} • {movies.total_results.toLocaleString('tr-TR')} film
+            Sayfa {page} / {movies.total_pages.toLocaleString('tr-TR')} yüklendi
           </div>
         )}
       </div>
+
+      {/* Scroll to Top FAB */}
+      {accumulatedMovies.length > 40 && (
+        <button
+          onClick={scrollToTop}
+          className="fixed bottom-8 right-8 p-4 bg-gradient-to-br from-cyan-500 to-blue-500 rounded-full shadow-2xl shadow-cyan-500/50 hover:shadow-cyan-500/70 transition-all duration-300 hover:scale-110 z-50"
+          aria-label="Başa dön"
+        >
+          <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+          </svg>
+        </button>
+      )}
     </div>
   );
 }

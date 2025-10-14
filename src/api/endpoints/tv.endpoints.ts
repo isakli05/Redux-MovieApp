@@ -9,6 +9,8 @@ import type { TvDetails } from '../../types/tvsDetails';
 import type { TvCredits } from '../../types/tvCredits';
 import type { TvSeasons } from '../../types/tvSeasons';
 import type { VideosResponse } from '../../types/videos';
+import type { SeasonVideosResponse } from '../../types/seasonVideos';
+import type { SeasonAggregateCreditsResponse } from '../../types/seasonCredits';
 import { TMDB_CONFIG } from '../../utils/constants';
 
 const API_KEY = TMDB_CONFIG.API_KEY;
@@ -107,6 +109,24 @@ export const tvApi = tmdbApi.injectEndpoints({
         `/tv/${tvId}/videos?language=${LANGUAGE}`,
       providesTags: (result, error, id) => [{ type: 'TV', id: `videos-${id}` }],
     }),
+
+    // Sezon videoları - v3 API Key ile
+    getSeasonVideos: builder.query<SeasonVideosResponse, { tvId: string; seasonNumber: number }>({
+      query: ({ tvId, seasonNumber }) => 
+        `/tv/${tvId}/season/${seasonNumber}/videos?language=${LANGUAGE}`,
+      providesTags: (result, error, { tvId, seasonNumber }) => [
+        { type: 'SeasonVideos', id: `${tvId}-${seasonNumber}` }
+      ],
+    }),
+
+    // Sezon aggregate credits - v3 API Key ile
+    getSeasonAggregateCredits: builder.query<SeasonAggregateCreditsResponse, { tvId: string; seasonNumber: number }>({
+      query: ({ tvId, seasonNumber }) => 
+        `/tv/${tvId}/season/${seasonNumber}/aggregate_credits?language=${LANGUAGE}`,
+      providesTags: (result, error, { tvId, seasonNumber }) => [
+        { type: 'SeasonCredits', id: `${tvId}-${seasonNumber}` }
+      ],
+    }),
   }),
 });
 
@@ -125,5 +145,7 @@ export const {
   useDiscoverTVShowsQuery,
   useGetFreeTVShowsQuery,
   useGetTVShowVideosQuery,
+  useGetSeasonVideosQuery,
+  useGetSeasonAggregateCreditsQuery,
 } = tvApi;
 

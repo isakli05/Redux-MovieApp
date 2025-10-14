@@ -1,99 +1,119 @@
-import { Link, useParams } from 'react-router-dom';
-import { useGetTVSeasonDetailsQuery } from '../../api/endpoints/tv.endpoints';
-import { getPosterUrl, formatDate, formatDuration, extractIdFromSlug } from '../../utils';
-import TvSeasonBanner from '../../components/Tvs/TvSeasonBanner';
+import { useState, useMemo } from 'react';
+import { useParams } from 'react-router-dom';
+import { 
+  useGetTVSeasonDetailsQuery, 
+  useGetTVShowDetailsQuery 
+} from '../../api/endpoints/tv.endpoints';
+import { extractIdFromSlug } from '../../utils';
+import EnhancedSeasonHeader from '../../components/Tvs/EnhancedSeasonHeader';
+import EpisodeStatistics from '../../components/Tvs/EpisodeStatistics';
+import EpisodeFilterBar, { type EpisodeSortOption, type SortOrder } from '../../components/Tvs/EpisodeFilterBar';
+import EnhancedEpisodeCard from '../../components/Tvs/EnhancedEpisodeCard';
+import MediaGallery from '../../components/MediaGallery/MediaGallery';
 import Loading from '../../components/Loading';
+import { sortEpisodes } from '../../utils/episodeSort';
 
 function TvSeasonDetail() {
   const { tv_id, season_number } = useParams<{ tv_id: string; season_number: string }>();
   const tvId = extractIdFromSlug(tv_id);
+  const seasonNum = Number(season_number);
 
-  const { data: seasonDetail, isLoading } = useGetTVSeasonDetailsQuery(
-    { tvId: tvId!, seasonNumber: Number(season_number) },
+  // Fetch season details
+  const { data: seasonDetail, isLoading: isSeasonLoading, error: seasonError } = useGetTVSeasonDetailsQuery(
+    { tvId: tvId!, seasonNumber: seasonNum },
     { skip: !tvId || !season_number }
   );
 
-  if (isLoading || !seasonDetail) {
+  // Fetch TV show details for navigation
+  const { data: tvDetail, isLoading: isTvLoading } = useGetTVShowDetailsQuery(tvId!, {
+    skip: !tvId,
+  });
+
+  // State for sorting
+  const [sortBy, setSortBy] = useState<EpisodeSortOption>('episode_number');
+  const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
+
+  // Handle sort change
+  const handleSortChange = (newSortBy: EpisodeSortOption, newSortOrder: SortOrder) => {
+    setSortBy(newSortBy);
+    setSortOrder(newSortOrder);
+  };
+
+  // Sort episodes
+  const sortedEpisodes = useMemo(() => {
+    if (!seasonDetail?.episodes) return [];
+    return sortEpisodes(seasonDetail.episodes, sortBy, sortOrder);
+  }, [seasonDetail?.episodes, sortBy, sortOrder]);
+
+  // Loading state
+  if (isSeasonLoading || isTvLoading || !seasonDetail || !tvDetail) {
     return <Loading />;
   }
 
-  return (
-    <div className="min-h-screen bg-slate-900">
-      <TvSeasonBanner />
-
-      <div className="container mx-auto px-4 py-8">
-        <div className="space-y-8">
-          {seasonDetail.episodes?.map((episode) => (
-            <div
-              key={episode.id}
-              className="flex flex-col md:flex-row gap-6 p-6 bg-slate-800 rounded-lg hover:bg-slate-700 transition-colors"
-            >
-              {/* Episode Image */}
-              <div className="flex-shrink-0">
-                <img
-                  loading="lazy"
-                  className="w-full md:w-64 h-48 md:h-36 rounded-md object-cover"
-                  src={getPosterUrl(episode.still_path)}
-                  alt={episode.name}
-                />
-              </div>
-
-              {/* Episode Info */}
-              <div className="flex-1 space-y-3">
-                <div className="flex justify-between items-start">
-                  <h3 className="text-xl md:text-2xl font-semibold text-gray-100">
-                    {episode.episode_number}. {episode.name}
-                  </h3>
-                  {episode.runtime && (
-                    <span className="text-slate-400 text-sm whitespace-nowrap ml-4">
-                      {formatDuration(episode.runtime)}
-                    </span>
-                  )}
-                </div>
-
-                <div className="flex gap-4 text-sm text-slate-400">
-                  {episode.air_date && (
-                    <span>{formatDate(episode.air_date)}</span>
-                  )}
-                  {episode.vote_average > 0 && (
-                    <span>⭐ {episode.vote_average.toFixed(1)}</span>
-                  )}
-                </div>
-
-                {episode.overview && (
-                  <p className="text-gray-300 leading-relaxed">
-                    {episode.overview}
-                  </p>
-                )}
-
-                {episode.guest_stars && episode.guest_stars.length > 0 && (
-                  <div>
-                    <h4 className="text-sm font-semibold text-slate-400 mb-2">
-                      Konuk Oyuncular:
-                    </h4>
-                    <div className="flex flex-wrap gap-2">
-                      {episode.guest_stars.slice(0, 5).map((star) => (
-                        <Link
-                          key={star.id}
-                          to={`/person/${star.id}`}
-                          className="text-sm text-cyan-400 hover:text-cyan-300"
-                        >
-                          {star.name}
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          ))}
+  // Error state
+  if (seasonError) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="text-red-400 text-6xl mb-4">⚠️</div>
+          <p className="text-red-400 text-xl font-semibold">Sezon bilgileri yüklenirken bir hata oluştu</p>
+          <p className="text-slate-400">Lütfen daha sonra tekrar deneyin</p>
         </div>
+      </div>
+    );
+  }
 
-        {seasonDetail.episodes?.length === 0 && (
-          <div className="text-center py-12">
-            <p className="text-gray-400 text-lg">Bu sezon için bölüm bilgisi bulunamadı.</p>
-          </div>
-        )}
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900">
+      {/* Enhanced Header */}
+      <EnhancedSeasonHeader
+        seasonDetail={seasonDetail}
+        tvDetail={tvDetail}
+        tvId={tvId!}
+        seasonNumber={seasonNum}
+      />
+
+      {/* Media Gallery */}
+      <div className="container mx-auto px-4 py-8">
+        <MediaGallery
+          mediaType="season"
+          id={tvId!}
+          seasonNumber={seasonNum}
+          defaultTab="videos"
+        />
+      </div>
+
+      {/* Statistics */}
+      <div className="container mx-auto px-4 py-8">
+        <EpisodeStatistics episodes={seasonDetail.episodes || []} />
+      </div>
+
+      {/* Filter Bar */}
+      <EpisodeFilterBar
+        sortBy={sortBy}
+        sortOrder={sortOrder}
+        onSortChange={handleSortChange}
+        totalEpisodes={seasonDetail.episodes?.length || 0}
+      />
+
+      {/* Episodes List */}
+      <div className="container mx-auto px-4 py-8">
+        <div className="space-y-6">
+          {sortedEpisodes.length > 0 ? (
+            sortedEpisodes.map((episode) => (
+              <EnhancedEpisodeCard
+                key={episode.id}
+                episode={episode}
+                tvId={tvId!}
+                seasonNumber={seasonNum}
+              />
+            ))
+          ) : (
+            <div className="text-center py-12">
+              <p className="text-gray-400 text-lg">Bu sezon için bölüm bilgisi bulunamadı.</p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

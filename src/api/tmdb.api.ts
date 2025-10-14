@@ -73,7 +73,7 @@ const baseQuery: typeof rawBaseQuery = async (args, api, extraOptions) => {
 export const tmdbApi = createApi({
   reducerPath: 'tmdbApi',
   baseQuery,
-  tagTypes: ['Movie', 'MovieDetail', 'TV', 'TVDetail', 'Person', 'PersonDetail', 'Credits', 'Collection', 'List', 'User'],
+  tagTypes: ['Movie', 'MovieDetail', 'TV', 'TVDetail', 'Person', 'PersonDetail', 'Credits', 'Collection', 'List', 'User', 'SeasonVideos', 'SeasonCredits', 'Media'],
   endpoints: () => ({}),
 });
 

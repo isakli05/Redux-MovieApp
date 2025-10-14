@@ -15,7 +15,7 @@ import MovieColletionBackDrop from '../../components/Movies/MovieColletionBackDr
 import MovieCredit from '../../components/Movies/MovieCredit';
 import MovieLabel from '../../components/Movies/MovieLabel';
 import MovieRecommendation from '../../components/Movies/MovieRecommendation';
-import MovieTrailer from '../../components/Movies/MovieTrailer';
+import MediaGallery from '../../components/MediaGallery/MediaGallery';
 import Loading from '../../components/Loading';
 
 function MovieDetail() {
@@ -145,8 +145,12 @@ function MovieDetail() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Column */}
           <div className="lg:col-span-2 space-y-12">
-            {/* Trailer */}
-            <MovieTrailer id={id} />
+            {/* Media Gallery */}
+            <MediaGallery
+              mediaType="movie"
+              id={movieId!}
+              defaultTab="videos"
+            />
 
             {/* Cast */}
             <section>

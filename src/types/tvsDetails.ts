@@ -51,6 +51,8 @@ export interface Season {
     overview: string;
     poster_path: string;
     season_number: number;
+    vote_average?: number;
+    vote_count?: number;
 }
 
 export interface SpokenLanguage {
