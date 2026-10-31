@@ -18,7 +18,11 @@ import {
   tmdb,
   type FunctionContext,
   type FunctionHandler,
-} from '../../_shared/tmdb';
+} from './_shared/tmdb';
+
+/** v2 in-source route (flat layout: packager discovers root-level functions) */
+export const config = { path: '/api/lists/:id' };
+
 
 /** Prefer context.params (bracket routing); fall back to parsing req.url. */
 function extractListId(req: Request, context: FunctionContext): number | null {

@@ -18,7 +18,11 @@ import {
   resolveAccountId,
   tmdb,
   type FunctionHandler,
-} from '../../_shared/tmdb';
+} from './_shared/tmdb';
+
+/** v2 in-source route (flat layout: packager discovers root-level functions) */
+export const config = { path: '/api/account/favorite' };
+
 
 export default (async (req: Request): Promise<Response> => {
   if (req.method !== 'POST') {

@@ -21,7 +21,11 @@ import {
   requireSession,
   tmdb,
   type FunctionHandler,
-} from '../_shared/tmdb';
+} from './_shared/tmdb';
+
+/** v2 in-source route (flat layout: packager discovers root-level functions) */
+export const config = { path: '/api/lists' };
+
 
 const MAX_NAME = 200;
 const MAX_DESCRIPTION = 1000;

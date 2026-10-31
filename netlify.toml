@@ -11,12 +11,8 @@
 [functions]
   directory = "netlify/functions"
 
-# API rewrites to the BFF — MUST precede the SPA catch-all below so that
-# /api/* reaches the functions instead of index.html.
-[[redirects]]
-  from = "/api/*"
-  to = "/.netlify/functions/:splat"
-  status = 200
+# BFF routes are declared in-source by each v2 function
+# (export const config = { path: '/api/...' }) — no redirect needed here.
 
 # Redirect rules for SPA
 [[redirects]]
