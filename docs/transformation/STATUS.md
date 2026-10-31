@@ -52,3 +52,11 @@ Wave 3: design tokens → UI primitives → shell/routes → Home → detail pag
 - 7 commits on `feature/cinematic-transformation` through `97e4032`.
 - Defect scoreboard: A (env untracked; rotation pending owner), B–L, M/N/O, P–V: FIXED and covered by tests or browser verification.
 - Deferred: Discover provider filter, ai-catalog.json, history purge (owner decision D6).
+
+
+## Final addendum (2026-11-01)
+
+- Credential rotation completed end-to-end; new key live (bundle verified), old keys dead.
+- Catalog listing pages (9) migrated to design system; MovieCarousel deleted; edge-fade overlays removed (owner feedback); PosterCard border visibility raised; favicon suite redesigned; Font Awesome CDN removed.
+- Production verified in owner's browser: catalog page new theme, SEO titles, authenticated account menu (BFF session works live), footer attributions.
+- 266 tests / 0 lint errors / build green. master @ 99a4255 deployed.

@@ -42,7 +42,14 @@ Dependencies: upgrade swiper (≥ safe version), react-router-dom, vite toolchai
 
 Procedure prepared: `git filter-repo --path .env --invert-paths` → verify with `git log --all -- .env` → force-push all branches → all clones invalid. **Irreversible and rewrites public history.** Rotation makes purge optional for security (a rotated key in history is harmless), but purge is still recommended for hygiene. Decision belongs to the owner.
 
-## Owner action checklist
+## ROTATION COMPLETED (2026-11-01)
+
+- New v3 API key generated via TMDB panel (owner entered password; confirm handled); old exposed key **disabled by TMDB** — all 5 historical generations now dead.
+- Netlify env updated (VITE_TMDB_API_KEY + TMDB_API_KEY, all contexts) → deployed → verified: live bundle embeds the new key only; catalog reads confirmed (Fight Club fetch + live /movie page).
+- v4 read access token rotated together with the key (regeneration refreshes both); it remains unused by the codebase (removed in Wave 3b-2).
+- Residual: historical commits still CONTAIN the old (now-dead) values. Purge is now optional hygiene only (D6 — needs explicit owner authorization).
+
+## Owner action checklist (all completed)
 
 1. Open TMDB API settings (authenticated) → create new v3 API key. (Old keys: revoke AFTER new key deployed & verified.)
 2. Delete/revoke the v4 read access token (unused by the app).
