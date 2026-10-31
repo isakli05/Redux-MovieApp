@@ -1,278 +1,333 @@
 /**
- * Search Page
- * Arama sonuçlarını gösteren ana sayfa
- * Hem Türkçe hem İngilizce sonuçları birleştirir
+ * Arama sonuçları sayfası (/search) — Cinematic Atlas spec §6 Search.
+ *
+ * URL-stateful: `?q=&category=all|movie|tv|person&page=` (paylaşılabilir).
+ * Gerçek API `total_results` sayıları tr-TR biçimde gösterilir (defect L fix)
+ * ve numaralı sayfalama URL'e senkron çalışır (defect K fix).
+ *
+ * TR + EN birleşik sorgulama korunur: multi/film/dizi kategorilerinde iki dil
+ * birlikte istenir, sonuçlar id üzerinden dedupe edilir (TR tercihli). Kişi
+ * kategorisi `/search/person` (TR) kullanır — kişi adları TMDB'de çevrilmez,
+ * ikinci bir dil isteği gereksizdir (bkz. TMDB_CAPABILITIES.md).
  */
 
-import { useState, useEffect, useMemo } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import {
-  MagnifyingGlassIcon,
-  AdjustmentsHorizontalIcon,
-  FilmIcon,
-  TvIcon,
-  UserIcon,
-  Squares2X2Icon,
-} from '@heroicons/react/24/outline';
-import { useSearchMultiQuery, useSearchMultiENQuery } from '@api/index';
-import SearchResults from '@components/Search/SearchResults';
-import type { MultiSearchItem, SearchCategory } from '../types/search';
+  useGetTrendingForSearchQuery,
+  useSearchMoviesENQuery,
+  useSearchMoviesQuery,
+  useSearchMultiENQuery,
+  useSearchMultiQuery,
+  useSearchPersonsQuery,
+  useSearchTVShowsENQuery,
+  useSearchTVShowsQuery,
+} from '@api/index';
+import {
+  Button,
+  EmptyState,
+  ErrorState,
+  PosterCard,
+  PosterCardSkeleton,
+  Tabs,
+} from '@components/ui';
+import {
+  formatCount,
+  mergeSearchResults,
+  mergedTotalPages,
+  mergedTotalResults,
+} from '@components/Search/SearchBar';
+import { PaginationNav } from '@components/Discover/PaginationNav';
+import { useSEO } from '@hooks/useSEO';
+import { toMediaSummary } from '@/types/mediaSummary';
+import type { MediaSummary } from '@/types/mediaSummary';
+import type { MultiSearchItem, SearchCategory } from '@/types/search';
+
+/** Arama sayfası için minimum sorgu uzunluğu (SearchBar submit eşiğiyle aynı). */
+const MIN_QUERY_LENGTH = 2;
+const SKELETON_COUNT = 12;
+const PAGE_CONTAINER = 'mx-auto w-full max-w-[1440px] px-4 py-10 sm:px-6 md:py-14 lg:px-8';
+const GRID_CLASS = 'grid grid-cols-[repeat(auto-fill,minmax(9.5rem,1fr))] gap-x-4 gap-y-8';
+
+const CATEGORY_TABS: { id: SearchCategory; label: string }[] = [
+  { id: 'all', label: 'Tümü' },
+  { id: 'movie', label: 'Film' },
+  { id: 'tv', label: 'Dizi' },
+  { id: 'person', label: 'Kişi' },
+];
+
+const isCategory = (value: string | null): value is SearchCategory =>
+  value === 'movie' || value === 'tv' || value === 'person';
+
+/** `/search/{movie,tv}` ham sonucunu multi şekline taşır (media_type ekler). */
+const asMultiPage = <T extends object>(
+  results: readonly T[] | undefined,
+  mediaType: 'movie' | 'tv',
+): { results: MultiSearchItem[] } | undefined =>
+  results
+    ? {
+        results: results.map(
+          (raw) => ({ ...raw, media_type: mediaType }) as unknown as MultiSearchItem,
+        ),
+      }
+    : undefined;
 
 export default function Search() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const navigate = useNavigate();
-  
-  const query = searchParams.get('q') || '';
-  const [page, setPage] = useState(1);
-  const [category, setCategory] = useState<SearchCategory>('all');
-  const [language, setLanguage] = useState<'tr' | 'en' | 'both'>('both');
 
-  // Türkçe arama
-  const { 
-    data: dataTR, 
-    isLoading: isLoadingTR,
-    isFetching: isFetchingTR 
-  } = useSearchMultiQuery(
-    { query, page },
-    { skip: !query || query.length < 2 || language === 'en' }
-  );
+  // Tek doğruluk kaynağı URL'dir.
+  const query = (searchParams.get('q') ?? '').trim();
+  const categoryParam = searchParams.get('category');
+  const category: SearchCategory = isCategory(categoryParam) ? categoryParam : 'all';
+  const page = Math.max(1, Number(searchParams.get('page')) || 1);
 
-  // İngilizce arama
-  const { 
-    data: dataEN, 
-    isLoading: isLoadingEN,
-    isFetching: isFetchingEN 
-  } = useSearchMultiENQuery(
-    { query, page },
-    { skip: !query || query.length < 2 || language === 'tr' }
-  );
+  useSEO({
+    title: query ? `“${query}” için arama sonuçları` : 'Arama',
+    description: query
+      ? `LMDB'de “${query}” için film, dizi ve kişi arama sonuçları.`
+      : `LMDB'de film, dizi ve kişi arayın.`,
+  });
 
-  // Sonuçları birleştir ve duplicate'leri temizle
-  const combinedResults = useMemo(() => {
-    const allResults: MultiSearchItem[] = [];
-    const seenIds = new Set<string>();
+  const minQuery = query.length >= MIN_QUERY_LENGTH;
 
-    // Türkçe sonuçları ekle
-    if (dataTR?.results) {
-      dataTR.results.forEach((item: MultiSearchItem) => {
-        const key = `${item.media_type}-${item.id}`;
-        if (!seenIds.has(key)) {
-          seenIds.add(key);
-          allResults.push(item);
-        }
-      });
-    }
+  // TR + EN çiftleri; yalnızca aktif kategorinin sorguları atılır.
+  const skipAll = !minQuery || category !== 'all';
+  const skipMovie = !minQuery || category !== 'movie';
+  const skipTv = !minQuery || category !== 'tv';
+  const skipPerson = !minQuery || category !== 'person';
 
-    // İngilizce sonuçları ekle (duplicate değilse)
-    if (dataEN?.results) {
-      dataEN.results.forEach((item: MultiSearchItem) => {
-        const key = `${item.media_type}-${item.id}`;
-        if (!seenIds.has(key)) {
-          seenIds.add(key);
-          allResults.push(item);
-        }
-      });
-    }
+  const multiTR = useSearchMultiQuery({ query, page }, { skip: skipAll });
+  const multiEN = useSearchMultiENQuery({ query, page }, { skip: skipAll });
+  const moviesTR = useSearchMoviesQuery({ query, page }, { skip: skipMovie });
+  const moviesEN = useSearchMoviesENQuery({ query, page }, { skip: skipMovie });
+  const tvTR = useSearchTVShowsQuery({ query, page }, { skip: skipTv });
+  const tvEN = useSearchTVShowsENQuery({ query, page }, { skip: skipTv });
+  const persons = useSearchPersonsQuery({ query, page }, { skip: skipPerson });
 
-    // Popülerlik ve rating'e göre sırala
-    return allResults.sort((a, b) => {
-      // Önce rating'e göre
-      const ratingA = a.vote_average || 0;
-      const ratingB = b.vote_average || 0;
-      if (Math.abs(ratingA - ratingB) > 1) {
-        return ratingB - ratingA;
+  // Kategoriye göre birleşim + GERÇEK toplamlar (defect L).
+  const { items, totalResults, totalPages, isLoading, isFetching, isError, refetch } =
+    useMemo(() => {
+      if (category === 'person') {
+        const mapped: MultiSearchItem[] = (persons.data?.results ?? []).map((raw) => ({
+          ...raw,
+          media_type: 'person' as const,
+        }));
+        return {
+          items: mapped,
+          totalResults: persons.data?.total_results ?? 0,
+          totalPages: Math.min(500, persons.data?.total_pages ?? 0),
+          isLoading: persons.isLoading,
+          isFetching: persons.isFetching,
+          isError: persons.isError,
+          refetch: persons.refetch,
+        };
       }
-      // Sonra popülerliğe göre
-      return b.popularity - a.popularity;
-    });
-  }, [dataTR, dataEN]);
 
-  // Kategoriye göre filtrele
-  const filteredResults = useMemo(() => {
-    if (category === 'all') return combinedResults;
-    return combinedResults.filter((item) => item.media_type === category);
-  }, [combinedResults, category]);
+      const tr = multiTR.data;
+      const en = multiEN.data;
+      const trMovie = moviesTR.data;
+      const enMovie = moviesEN.data;
+      const trTv = tvTR.data;
+      const enTv = tvEN.data;
 
-  // Her kategorideki sonuç sayıları
-  const categoryCounts = useMemo(() => {
-    return {
-      all: combinedResults.length,
-      movie: combinedResults.filter((item) => item.media_type === 'movie').length,
-      tv: combinedResults.filter((item) => item.media_type === 'tv').length,
-      person: combinedResults.filter((item) => item.media_type === 'person').length,
-    };
-  }, [combinedResults]);
+      const merged =
+        category === 'movie'
+          ? mergeSearchResults(
+              trMovie ? asMultiPage(trMovie.results, 'movie') : undefined,
+              enMovie ? asMultiPage(enMovie.results, 'movie') : undefined,
+            )
+          : category === 'tv'
+            ? mergeSearchResults(
+                trTv ? asMultiPage(trTv.results, 'tv') : undefined,
+                enTv ? asMultiPage(enTv.results, 'tv') : undefined,
+              )
+            : mergeSearchResults(tr, en);
 
-  // Loading durumu
-  const isLoading = isLoadingTR || isLoadingEN;
-  const isFetching = isFetchingTR || isFetchingEN;
+      const pair =
+        category === 'movie'
+          ? { tr: moviesTR, en: moviesEN }
+          : category === 'tv'
+            ? { tr: tvTR, en: tvEN }
+            : { tr: multiTR, en: multiEN };
 
-  // Query değiştiğinde sayfayı sıfırla
-  useEffect(() => {
-    setPage(1);
-  }, [query]);
+      return {
+        items: merged,
+        totalResults: mergedTotalResults(pair.tr.data, pair.en.data),
+        totalPages: mergedTotalPages(pair.tr.data, pair.en.data),
+        isLoading: pair.tr.isLoading || pair.en.isLoading,
+        isFetching: pair.tr.isFetching || pair.en.isFetching,
+        isError: pair.tr.isError && pair.en.isError,
+        refetch: pair.tr.refetch,
+      };
+    }, [
+      category,
+      multiTR,
+      multiEN,
+      moviesTR,
+      moviesEN,
+      tvTR,
+      tvEN,
+      persons,
+    ]);
 
-  // Boş query ile gelindiyse ana sayfaya yönlendir
-  useEffect(() => {
-    if (!query) {
-      navigate('/');
-    }
-  }, [query, navigate]);
+  // PosterCard'e MediaSummary olarak akıtılır (person → profil kartı).
+  const summaries = useMemo(
+    () => items.map((item) => toMediaSummary(item)),
+    [items],
+  );
 
-  // Kategori değişimi
-  const handleCategoryChange = (newCategory: SearchCategory) => {
-    setCategory(newCategory);
-    setPage(1);
+  // URL yazma: temiz URL'ler için varsayılan değerler (all/1) yazılmaz.
+  const writeParams = (nextCategory: SearchCategory, nextPage: number) => {
+    const params: Record<string, string> = { q: query };
+    if (nextCategory !== 'all') params.category = nextCategory;
+    if (nextPage > 1) params.page = String(nextPage);
+    setSearchParams(params);
+    window.scrollTo({ top: 0 });
   };
 
-  // Dil değişimi
-  const handleLanguageChange = (newLanguage: 'tr' | 'en' | 'both') => {
-    setLanguage(newLanguage);
-    setPage(1);
-  };
+  // Boş sorgu: yönlendirme yerine yönlendirici boş durum.
+  if (!query) {
+    return (
+      <div className="min-h-screen bg-surface-void">
+        <div className={PAGE_CONTAINER}>
+          <EmptyState
+            icon={<MagnifyingGlassIcon className="h-10 w-10" />}
+            title="Aramak için bir şey yazın"
+            hint="Üstteki arama düğmesini ya da ⌘K kısayolunu kullanarak film, dizi ve kişi arayabilirsiniz."
+            action={
+              <div className="flex flex-wrap items-center justify-center gap-3">
+                <Button to="/kesfet">Keşfet'e Git</Button>
+                <Button variant="ghost" to="/">
+                  Ana Sayfa
+                </Button>
+              </div>
+            }
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-slate-900 py-8">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-4">
-            <MagnifyingGlassIcon className="h-8 w-8 text-cyan-400" />
-            <h1 className="text-3xl font-bold text-white">
-              Arama Sonuçları
-            </h1>
-          </div>
-          
-          {query && (
-            <p className="text-gray-400 text-lg">
-              "<span className="text-white font-semibold">{query}</span>" için{' '}
-              <span className="text-cyan-400 font-semibold">
-                {filteredResults.length}
-              </span>{' '}
-              sonuç bulundu
-            </p>
-          )}
-        </div>
+    <div className="min-h-screen bg-surface-void">
+      <div className={PAGE_CONTAINER}>
+        {/* Başlık + gerçek sonuç sayısı (defect L) */}
+        <header className="mb-6">
+          <p className="mb-1 text-xs font-medium uppercase tracking-[0.08em] text-accent">Arama</p>
+          <h1 className="font-display text-2xl font-semibold tracking-tight text-primary md:text-3xl">
+            “{query}” için sonuçlar
+          </h1>
+          <p className="mt-2 text-sm text-secondary">
+            {minQuery && !isLoading ? (
+              <>
+                <span className="tabular-nums font-medium text-primary">
+                  {formatCount(totalResults)} sonuç
+                </span>
+                {totalPages > 1 && (
+                  <span className="tabular-nums">
+                    {' '}
+                    · {page}. sayfa / {totalPages}
+                  </span>
+                )}
+              </>
+            ) : (
+              'Sonuçlar yükleniyor…'
+            )}
+          </p>
+        </header>
 
-        {/* Filters */}
-        <div className="mb-6 space-y-4">
-          {/* Kategori Filtreleri */}
-          <div className="flex flex-wrap gap-2">
-            <button
-              onClick={() => handleCategoryChange('all')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
-                category === 'all'
-                  ? 'bg-cyan-500 text-white shadow-lg shadow-cyan-500/30'
-                  : 'bg-slate-800 text-gray-300 hover:bg-slate-700'
-              }`}
-            >
-              <Squares2X2Icon className="h-5 w-5" />
-              Tümü ({categoryCounts.all})
-            </button>
-            <button
-              onClick={() => handleCategoryChange('movie')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
-                category === 'movie'
-                  ? 'bg-cyan-500 text-white shadow-lg shadow-cyan-500/30'
-                  : 'bg-slate-800 text-gray-300 hover:bg-slate-700'
-              }`}
-            >
-              <FilmIcon className="h-5 w-5" />
-              Filmler ({categoryCounts.movie})
-            </button>
-            <button
-              onClick={() => handleCategoryChange('tv')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
-                category === 'tv'
-                  ? 'bg-cyan-500 text-white shadow-lg shadow-cyan-500/30'
-                  : 'bg-slate-800 text-gray-300 hover:bg-slate-700'
-              }`}
-            >
-              <TvIcon className="h-5 w-5" />
-              Diziler ({categoryCounts.tv})
-            </button>
-            <button
-              onClick={() => handleCategoryChange('person')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
-                category === 'person'
-                  ? 'bg-cyan-500 text-white shadow-lg shadow-cyan-500/30'
-                  : 'bg-slate-800 text-gray-300 hover:bg-slate-700'
-              }`}
-            >
-              <UserIcon className="h-5 w-5" />
-              Kişiler ({categoryCounts.person})
-            </button>
-          </div>
+        {/* Kategori sekmeleri */}
+        <Tabs
+          tabs={CATEGORY_TABS}
+          activeId={category}
+          onChange={(id) => writeParams(id as SearchCategory, 1)}
+          aria-label="Sonuç kategorileri"
+          className="mb-6"
+        />
 
-          {/* Dil Filtreleri */}
-          <div className="flex items-center gap-3">
-            <AdjustmentsHorizontalIcon className="h-5 w-5 text-gray-400" />
-            <span className="text-gray-400 text-sm font-medium">Dil:</span>
-            <div className="flex gap-2">
-              <button
-                onClick={() => handleLanguageChange('both')}
-                className={`px-3 py-1 rounded-md text-sm font-medium transition-all ${
-                  language === 'both'
-                    ? 'bg-slate-700 text-white'
-                    : 'bg-slate-800/50 text-gray-400 hover:bg-slate-800'
-                }`}
-              >
-                Her İkisi
-              </button>
-              <button
-                onClick={() => handleLanguageChange('tr')}
-                className={`px-3 py-1 rounded-md text-sm font-medium transition-all ${
-                  language === 'tr'
-                    ? 'bg-slate-700 text-white'
-                    : 'bg-slate-800/50 text-gray-400 hover:bg-slate-800'
-                }`}
-              >
-                Türkçe
-              </button>
-              <button
-                onClick={() => handleLanguageChange('en')}
-                className={`px-3 py-1 rounded-md text-sm font-medium transition-all ${
-                  language === 'en'
-                    ? 'bg-slate-700 text-white'
-                    : 'bg-slate-800/50 text-gray-400 hover:bg-slate-800'
-                }`}
-              >
-                İngilizce
-              </button>
+        {/* Sonuçlar */}
+        {isError ? (
+          <ErrorState
+            title="Arama sonuçları yüklenemedi"
+            message="TMDB'ye ulaşırken bir sorun oluştu. Lütfen tekrar deneyin."
+            onRetry={refetch}
+            backTo="/"
+            backLabel="Ana Sayfaya Dön"
+          />
+        ) : isLoading && summaries.length === 0 ? (
+          <div className={GRID_CLASS}>
+            {Array.from({ length: SKELETON_COUNT }, (_, index) => (
+              <PosterCardSkeleton key={index} className="!w-full" />
+            ))}
+          </div>
+        ) : summaries.length === 0 && !isFetching ? (
+          <SearchEmpty query={query} />
+        ) : (
+          <>
+            <div className={GRID_CLASS}>
+              {summaries.map((item: MediaSummary) => (
+                <PosterCard
+                  key={`${item.media_type}-${item.id}`}
+                  item={item}
+                  className="!w-full"
+                  showMediaType={category === 'all'}
+                />
+              ))}
             </div>
-          </div>
-        </div>
 
-        {/* Loading Indicator */}
-        {isFetching && (
-          <div className="mb-4 flex items-center gap-2 text-cyan-400">
-            <div className="h-4 w-4 animate-spin rounded-full border-2 border-cyan-400 border-t-transparent" />
-            <span className="text-sm font-medium">Yükleniyor...</span>
-          </div>
-        )}
-
-        {/* Results */}
-        <SearchResults results={filteredResults} isLoading={isLoading && !isFetching} />
-
-        {/* Empty State */}
-        {!isLoading && !isFetching && query && filteredResults.length === 0 && (
-          <div className="text-center py-16">
-            <div className="text-6xl mb-4">🔍</div>
-            <h3 className="text-xl font-semibold text-white mb-2">
-              Sonuç Bulunamadı
-            </h3>
-            <p className="text-gray-400 mb-6">
-              "<span className="text-white">{query}</span>" için hiçbir sonuç bulunamadı
-            </p>
-            <div className="space-y-2 text-sm text-gray-500">
-              <p>• Arama terimini kontrol edin</p>
-              <p>• Daha genel kelimeler kullanmayı deneyin</p>
-              <p>• Farklı bir kategori seçmeyi deneyin</p>
-            </div>
-          </div>
+            {/* Numaralı sayfalama (defect K) — URL senkron */}
+            <PaginationNav
+              page={page}
+              totalPages={totalPages}
+              onPageChange={(next) => writeParams(category, next)}
+              className="mt-10"
+            />
+          </>
         )}
       </div>
     </div>
   );
 }
 
+// ---------------------------------------------------------------------------
+
+/** Boş sonuç durumu: öneriler (kompakt trend şeridi) + Keşfet'e geçiş. */
+function SearchEmpty({ query }: { query: string }) {
+  const { data: trending } = useGetTrendingForSearchQuery();
+  const suggestions = useMemo(
+    () =>
+      (trending?.results ?? [])
+        .slice(0, 8)
+        .map((item) => toMediaSummary(item)),
+    [trending],
+  );
+
+  return (
+    <div>
+      <EmptyState
+        icon={<MagnifyingGlassIcon className="h-10 w-10" />}
+        title="Sonuç bulunamadı"
+        hint={`“${query}” için hiçbir film, dizi veya kişi bulunamadı. Yazımı kontrol edin ya da daha genel bir terim deneyin.`}
+        action={
+          <Button to="/kesfet" variant="outline" size="sm">
+            Gelişmiş keşfetme için Keşfet'e geç
+          </Button>
+        }
+      />
+
+      {suggestions.length > 0 && (
+        <section aria-label="Öneriler" className="mt-4 border-t border-line pt-8">
+          <h2 className="mb-4 text-xs font-semibold uppercase tracking-[0.08em] text-secondary">
+            Bunlara da göz atın
+          </h2>
+          <div className="flex flex-wrap gap-4">
+            {suggestions.map((item) => (
+              <PosterCard key={`${item.media_type}-${item.id}`} item={item} size="sm" />
+            ))}
+          </div>
+        </section>
+      )}
+    </div>
+  );
+}

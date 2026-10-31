@@ -1,9 +1,10 @@
-import React from 'react'
+import { DetailNotFound } from '@components/detail'
+import { useSEO } from '@hooks/useSEO'
 
+/** Catch-all for unknown /tv/* routes and TMDB 404 detail responses. */
 function Tv404() {
-  return (
-    <div>Böyle bir tv programı bulunamadı!!!</div>
-  )
+  useSEO({ title: 'Dizi bulunamadı' })
+  return <DetailNotFound mediaType="tv" />
 }
 
 export default Tv404
