@@ -1,0 +1,15 @@
+# LMDB — Film ve Dizi Keşif Platformu
+
+> TMDB verileriyle çalışan film ve dizi keşif uygulaması. Türkçe arayüz.
+
+## Ana sayfalar
+
+- [Ana Sayfa](https://isa-kaya-movieapp.netlify.app/): Trend olanlar, vizyondakiler, eleştirmenlerin seçtikleri, gizli cevherler ve bölgeye göre ücretsiz içerikler
+- [Keşfet](https://isa-kaya-movieapp.netlify.app/kesfet): Türe, yıla, puana ve dile göre filtrelemeli gelişmiş keşif
+- [Arama](https://isa-kaya-movieapp.netlify.app/search): Film, dizi ve kişi arama
+- [Filmler](https://isa-kaya-movieapp.netlify.app/movie) / [Diziler](https://isa-kaya-movieapp.netlify.app/tv): Kataloglar
+- [İnsanlar](https://isa-kaya-movieapp.netlify.app/person): Oyuncu ve ekip keşfi
+
+## Veri ve atıf
+
+Bu ürün TMDB API'sini kullanır ancak TMDB tarafından onaylanmamış veya sertifikalanmamıştır. Yayın bilgileri JustWatch tarafından sağlanır.

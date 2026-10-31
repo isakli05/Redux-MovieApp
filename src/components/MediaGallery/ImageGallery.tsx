@@ -56,7 +56,7 @@ const ImageGallery = memo<ImageGalleryProps>(({ images, category }) => {
   if (images.length === 0) {
     return (
       <div className="text-center py-12">
-        <p className="text-slate-400">Bu kategori için görsel bulunamadı.</p>
+        <p className="text-secondary">Bu kategori için görsel bulunamadı.</p>
       </div>
     );
   }

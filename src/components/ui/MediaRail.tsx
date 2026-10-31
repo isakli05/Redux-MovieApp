@@ -1,4 +1,4 @@
-import { Children, useCallback, useRef } from 'react'
+import { Children, useCallback, useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { SectionHeader } from './SectionHeader'
 
@@ -9,6 +9,8 @@ export interface MediaRailProps {
   linkLabel?: string
   /** PosterCards (or any tiles); each child is wrapped in a snap-start list item. */
   children: ReactNode
+  /** Rail background tone for the edge fades (default surface-void). */
+  fadeTone?: 'surface-void' | 'surface-base'
   className?: string
 }
 
@@ -34,9 +36,11 @@ const chevronClasses =
 
 /**
  * Horizontal scroll-snap rail with SectionHeader, desktop chevrons (scroll by
- * 80% of the rail width) and edge fades. No Swiper (spec §5). Negative
- * gutters make the rail bleed to the viewport edge inside pages that use the
- * spec gutters (px-4 sm:px-6 lg:px-8).
+ * 80% of the rail width) and directional edge fades. Fades appear only on the
+ * side where more content exists, so a resting rail never fogs its first card
+ * and a clipped card always reads as "scroll this way". No Swiper (spec §5).
+ * Negative gutters make the rail bleed to the viewport edge inside pages that
+ * use the spec gutters (px-4 sm:px-6 lg:px-8).
  */
 export function MediaRail({
   title,
@@ -44,9 +48,33 @@ export function MediaRail({
   linkTo,
   linkLabel,
   children,
+  fadeTone = 'surface-void',
   className = '',
 }: MediaRailProps) {
   const listRef = useRef<HTMLUListElement>(null)
+  const [edges, setEdges] = useState({ start: false, end: false })
+
+  const updateEdges = useCallback(() => {
+    const list = listRef.current
+    if (!list) return
+    const maxScroll = list.scrollWidth - list.clientWidth
+    setEdges({
+      start: list.scrollLeft > 4,
+      end: list.scrollLeft < maxScroll - 4,
+    })
+  }, [])
+
+  useEffect(() => {
+    const list = listRef.current
+    if (!list) return
+    updateEdges()
+    list.addEventListener('scroll', updateEdges, { passive: true })
+    window.addEventListener('resize', updateEdges)
+    return () => {
+      list.removeEventListener('scroll', updateEdges)
+      window.removeEventListener('resize', updateEdges)
+    }
+  }, [updateEdges])
 
   const scrollRail = useCallback((direction: 1 | -1) => {
     const list = listRef.current
@@ -57,6 +85,11 @@ export function MediaRail({
       behavior: reduceMotion ? 'auto' : 'smooth',
     })
   }, [])
+
+  const fadeBase =
+    'pointer-events-none absolute inset-y-0 z-[5] w-16 transition-opacity duration-200 md:w-24'
+  // Literal class names only — Tailwind JIT cannot compile template strings
+  const fadeFrom = fadeTone === 'surface-base' ? 'from-surface-base' : 'from-surface-void'
 
   return (
     <section className={className}>
@@ -77,11 +110,11 @@ export function MediaRail({
 
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-y-0 left-0 z-[5] w-10 bg-gradient-to-r from-surface-void to-transparent"
+          className={`${fadeBase} left-0 bg-gradient-to-r ${fadeFrom} to-transparent ${edges.start ? 'opacity-100' : 'opacity-0'}`}
         />
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-y-0 right-0 z-[5] w-10 bg-gradient-to-l from-surface-void to-transparent"
+          className={`${fadeBase} right-0 bg-gradient-to-l ${fadeFrom} to-transparent ${edges.end ? 'opacity-100' : 'opacity-0'}`}
         />
 
         <button type="button" aria-label="Önceki" onClick={() => scrollRail(-1)} className={chevronClasses + ' left-2'}>

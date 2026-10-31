@@ -58,8 +58,8 @@ export function BackdropHero({ backdropPath, children, className = '' }: Backdro
           sizes="100vw"
           alt=""
           loading="eager"
-          fetchPriority="high"
           decoding="async"
+          {...{ fetchpriority: 'high' }}
           className="absolute inset-0 h-full w-full object-cover"
         />
       ) : (

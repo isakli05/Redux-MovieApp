@@ -4,12 +4,13 @@
  */
 
 import { memo } from 'react';
-import { 
-  FilmIcon, 
-  PhotoIcon, 
-  RectangleStackIcon, 
-  SparklesIcon, 
-  UserCircleIcon 
+import type { ComponentType } from 'react';
+import {
+  FilmIcon,
+  PhotoIcon,
+  RectangleStackIcon,
+  SparklesIcon,
+  UserCircleIcon
 } from '@heroicons/react/24/outline';
 import { useMediaGallery } from '../../hooks/useMediaGallery';
 import MediaGalleryTabs from './MediaGalleryTabs';
@@ -37,7 +38,7 @@ const MediaGallery = memo<MediaGalleryProps>(({ mediaType, id, seasonNumber, def
   if (error) {
     return (
       <div className="text-center py-12">
-        <p className="text-red-400">Medya içerikleri yüklenirken bir hata oluştu.</p>
+        <p className="text-danger">Medya içerikleri yüklenirken bir hata oluştu.</p>
       </div>
     );
   }
@@ -46,18 +47,7 @@ const MediaGallery = memo<MediaGalleryProps>(({ mediaType, id, seasonNumber, def
     return null;
   }
 
-  // Gender-based color theme (for person pages)
-  const isMale = gender === 2;
-  const isFemale = gender === 1;
-  const hasGender = isMale || isFemale;
-  
-  const gradientBar = hasGender
-    ? isMale 
-      ? 'from-blue-400 to-cyan-500' 
-      : 'from-purple-400 to-pink-500'
-    : 'from-cyan-400 to-blue-500'; // Default
-
-  const tabConfig: Record<MediaTab, { icon: any; label: string; count: number }> = {
+  const tabConfig: Record<MediaTab, { icon: ComponentType<{ className?: string }>; label: string; count: number }> = {
     videos: { icon: FilmIcon, label: 'Videolar', count: videos.length },
     posters: { icon: PhotoIcon, label: 'Posterler', count: images.posters?.length || 0 },
     backdrops: { icon: RectangleStackIcon, label: 'Arka Planlar', count: images.backdrops?.length || 0 },
@@ -68,8 +58,8 @@ const MediaGallery = memo<MediaGalleryProps>(({ mediaType, id, seasonNumber, def
   return (
     <MediaGalleryErrorBoundary>
       <section className="space-y-6">
-        <h2 className="text-2xl font-bold text-white flex items-center gap-3">
-          <div className={`w-1 h-8 bg-gradient-to-b ${gradientBar} rounded-full`} />
+        <h2 className="flex items-center gap-3 font-display text-2xl font-semibold text-primary">
+          <div className="h-8 w-1 rounded-full bg-accent" aria-hidden="true" />
           Medya Galerisi
         </h2>
 

@@ -53,7 +53,7 @@ function SearchTrigger({ onClick, compact = false }: { onClick: () => void; comp
     <button
       type="button"
       onClick={onClick}
-      aria-label="Arama aç"
+      aria-label="Ara (arama aç)"
       className={`group ${
         compact
           ? 'inline-flex h-10 w-10 items-center justify-center rounded-md text-secondary hover:bg-surface-overlay hover:text-primary'

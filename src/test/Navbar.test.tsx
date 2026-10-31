@@ -64,7 +64,7 @@ describe('Navbar', () => {
     // Both the desktop pill and the compact mobile icon button carry the same
     // label; the desktop one is identified by its shortcut hint.
     const [trigger] = screen
-      .getAllByRole('button', { name: 'Arama aç' })
+      .getAllByRole('button', { name: 'Ara (arama aç)' })
       .filter((button) => /[⌘K]|Ctrl K/.test(button.textContent ?? ''))
     expect(trigger).toBeDefined()
 

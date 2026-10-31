@@ -49,7 +49,7 @@ const Person404 = lazy(() => import('./Pages/Persons/Person404'));
 function RouteLoading() {
   return (
     <div
-      className="flex min-h-[60vh] flex-col items-center justify-center gap-6 px-4"
+      className="flex min-h-[calc(100dvh-4rem)] flex-col items-center justify-center gap-6 px-4"
       role="status"
       aria-live="polite"
     >

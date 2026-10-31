@@ -11,6 +11,8 @@ import { RecentsRail } from '@components/Home/RecentsRail'
 
 /** Spec §3 ritmi: py-16 md:py-20, max-w-[1440px] container, spec olukları. */
 const SECTION_CLASS = 'mx-auto w-full max-w-[1440px] px-4 py-16 sm:px-6 md:py-20 lg:px-8'
+/** Hero'ya bitişik ilk bölüm: üst boşluk sıkı (hero zaten alt pad veriyor). */
+const FIRST_SECTION_CLASS = 'mx-auto w-full max-w-[1440px] px-4 pt-10 pb-16 sm:px-6 md:pt-14 md:pb-20 lg:px-8'
 
 /**
  * Home — "Cinematic Atlas" mavi baskısı (DESIGN_DIRECTION.md §6):
@@ -30,7 +32,7 @@ function Home() {
     <div className="min-h-screen bg-surface-void">
       <HomeHero />
 
-      <TrendingRail className={SECTION_CLASS} />
+      <TrendingRail className={FIRST_SECTION_CLASS} />
 
       <div className="bg-surface-base">
         <NowPlayingBand className={SECTION_CLASS} />

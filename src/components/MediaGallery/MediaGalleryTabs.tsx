@@ -17,6 +17,7 @@ interface MediaGalleryTabsProps {
   activeTab: MediaTab;
   onTabChange: (tab: MediaTab) => void;
   tabConfig: Record<MediaTab, TabConfig>;
+  /** Kept for API compatibility (person pages pass it); palette is gender-neutral gold now. */
   gender?: number;
 }
 
@@ -25,33 +26,9 @@ const MediaGalleryTabs = memo<MediaGalleryTabsProps>(({
   activeTab,
   onTabChange,
   tabConfig,
-  gender,
 }) => {
-  // Gender-based color theme
-  const isMale = gender === 2;
-  const isFemale = gender === 1;
-  const hasGender = isMale || isFemale;
-  
-  const activeGradient = hasGender
-    ? isMale
-      ? 'from-blue-500 to-cyan-500'
-      : 'from-purple-500 to-pink-500'
-    : 'from-cyan-500 to-blue-500'; // Default
-  
-  const activeShadow = hasGender
-    ? isMale
-      ? 'shadow-blue-500/30'
-      : 'shadow-purple-500/30'
-    : 'shadow-cyan-500/30'; // Default
-  
-  const focusRing = hasGender
-    ? isMale
-      ? 'focus:ring-blue-500'
-      : 'focus:ring-purple-500'
-    : 'focus:ring-cyan-500'; // Default
-
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex flex-wrap gap-2" role="tablist" aria-label="Medya kategorileri">
       {tabs.map((tab) => {
         const config = tabConfig[tab];
         const Icon = config.icon;
@@ -60,25 +37,26 @@ const MediaGalleryTabs = memo<MediaGalleryTabsProps>(({
         return (
           <button
             key={tab}
+            type="button"
+            role="tab"
             onClick={() => onTabChange(tab)}
             className={`
-              flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-all duration-300
+              flex items-center gap-2 rounded-lg border px-4 py-2.5 font-medium transition-colors duration-150 ease-cine
               ${isActive
-                ? `bg-gradient-to-r ${activeGradient} text-white shadow-lg ${activeShadow}`
-                : 'bg-slate-800/50 text-slate-400 hover:text-white hover:bg-slate-700/50 border border-slate-700/50'
+                ? 'border-accent bg-surface-overlay text-accent'
+                : 'border-line bg-surface-raised text-secondary hover:border-line-strong hover:text-primary'
               }
-              focus:outline-none focus:ring-2 ${focusRing} focus:ring-offset-2 focus:ring-offset-slate-900
             `}
-            aria-label={`View ${config.label}`}
-            aria-current={isActive ? 'page' : undefined}
+            aria-label={`${config.label} sekmesi`}
+            aria-selected={isActive}
           >
-            <Icon className="h-5 w-5" />
+            <Icon className="h-5 w-5" aria-hidden="true" />
             <span>{config.label}</span>
             <span className={`
-              px-2 py-0.5 rounded-full text-xs font-semibold
+              rounded-full px-2 py-0.5 text-xs font-semibold
               ${isActive
-                ? 'bg-white/20 text-white'
-                : 'bg-slate-700/50 text-slate-400'
+                ? 'bg-accent text-accent-ink'
+                : 'bg-surface-overlay text-muted'
               }
             `}>
               {config.count}

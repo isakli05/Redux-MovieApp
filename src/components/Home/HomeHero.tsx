@@ -81,11 +81,12 @@ function HeroSlide({ slide }: { slide: MediaSummary }) {
       <p className="mb-3 text-xs font-medium uppercase tracking-[0.08em] text-accent">
         Bugün öne çıkan {mediaLabel[slide.media_type].toLocaleLowerCase('tr-TR')}
       </p>
-      <h1 className="max-w-4xl line-clamp-2 font-display text-[clamp(2.25rem,5.5vw,4rem)] font-semibold leading-[1.08] tracking-tight text-primary">
+      {/* min-h: 2 satır rezerve — slayt değişiminde yerleşim kaymasını (CLS) önler */}
+      <h1 className="max-w-4xl line-clamp-2 min-h-[2.2em] font-display text-[clamp(2.25rem,5.5vw,4rem)] font-semibold leading-[1.08] tracking-tight text-primary">
         {slide.title}
       </h1>
 
-      <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2">
+      <div className="mt-4 flex min-h-[1.75rem] flex-wrap items-center gap-x-3 gap-y-2">
         {year && <span className={chipClass}>{year}</span>}
         <span className={chipClass}>{mediaLabel[slide.media_type]}</span>
         {hasScore && (
@@ -96,11 +97,9 @@ function HeroSlide({ slide }: { slide: MediaSummary }) {
         )}
       </div>
 
-      {slide.overview && (
-        <p className="mt-4 max-w-2xl line-clamp-2 text-sm leading-relaxed text-secondary md:text-base">
-          {slide.overview}
-        </p>
-      )}
+      <p className="mt-4 max-w-2xl line-clamp-2 min-h-[2.7em] text-sm leading-relaxed text-secondary md:text-base">
+        {slide.overview ?? ''}
+      </p>
 
       <div className="mt-6 flex flex-wrap gap-3">
         <Button to={detailPath} size="lg">
@@ -159,7 +158,7 @@ export function HomeHero() {
     <section
       aria-label="Öne çıkanlar"
       aria-roledescription="karusel"
-      className="relative flex min-h-[62vh] flex-col justify-end overflow-hidden bg-surface-void md:min-h-[72vh]"
+      className="relative flex h-[74vh] min-h-[520px] flex-col justify-end overflow-hidden bg-surface-void md:h-[76vh] md:min-h-[560px]"
       onMouseEnter={() => setHoverPaused(true)}
       onMouseLeave={() => setHoverPaused(false)}
       onFocus={() => setFocusPaused(true)}
@@ -182,12 +181,13 @@ export function HomeHero() {
       </div>
 
       <div className="relative z-10 mx-auto w-full max-w-[1440px] px-4 pb-10 pt-6 sm:px-6 md:pb-14 lg:px-8">
-        <div key={current ? `${current.media_type}-${current.id}` : 'hero-static'}>
+        {/* min-h: iskelet→içerik geçişinde blok yüksekliğini sabitler (CLS) */}
+        <div key={current ? `${current.media_type}-${current.id}` : 'hero-static'} className="min-h-[380px] md:min-h-[330px]">
           {isLoading ? <HeroSkeleton /> : current ? <HeroSlide slide={current} /> : <HeroFallback />}
         </div>
 
         {slides.length > 1 && (
-          <div className="mt-6 flex items-center gap-2" role="group" aria-label="Slaytlar">
+          <div className="mt-4 flex items-center gap-1" role="group" aria-label="Slaytlar">
             {slides.map((slide, index) => (
               <button
                 key={`${slide.media_type}-${slide.id}`}
@@ -195,12 +195,17 @@ export function HomeHero() {
                 onClick={() => setActive(index)}
                 aria-label={`${index + 1}. öne çıkanı göster`}
                 aria-current={index === activeIndex ? 'true' : undefined}
-                className={`h-2 rounded-full transition-all duration-250 ease-cine ${
-                  index === activeIndex
-                    ? 'w-7 bg-accent'
-                    : 'w-2 bg-line-strong hover:bg-accent-hover'
-                }`}
-              />
+                className="flex h-6 min-w-6 items-center justify-center rounded-full transition-colors duration-150 ease-cine hover:bg-surface-overlay"
+              >
+                {/* 24px dokunma alanı + görsel nokta ayrı: target-size erişilebilirlik */}
+                <span
+                  className={`block h-2 rounded-full transition-all duration-250 ease-cine ${
+                    index === activeIndex
+                      ? 'w-7 bg-accent'
+                      : 'w-2 bg-line-strong group-hover:bg-accent-hover'
+                  }`}
+                />
+              </button>
             ))}
           </div>
         )}
