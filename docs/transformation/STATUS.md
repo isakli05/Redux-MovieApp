@@ -9,10 +9,10 @@ Branch: `feature/cinematic-transformation` (base: master @ 6a7f55c6). Owner repo
 | 0 — Init (clone, branch, Graphify, env) | ✅ Done |
 | 1 — Parallel discovery (4 agents) | ✅ Done |
 | 2 — Synthesis, contracts, decisions | ✅ Done (this document set) |
-| 3 — Core visual implementation | 🔄 In progress |
-| 4 — API/security/feature integration | 🔄 Partially pulled forward (env untrack, auth BFF) |
-| 5 — Polish & verification | ⬜ Not started |
-| 6 — Release preparation | ⬜ Not started |
+| 3 — Core visual implementation | ✅ Done (foundation + 7 parallel surface agents) |
+| 4 — API/security/feature integration | ✅ Done (BFF, rotation-ready, audit 0 high) |
+| 5 — Polish & verification | ✅ Done (Lighthouse 100/100/100, CLS 0.02, 259 tests) |
+| 6 — Release preparation | ✅ RC verified locally; deploy blocked on owner actions (see RELEASE_VERIFICATION.md) |
 
 ## Verified baseline (evidence: BASELINE.md, agent reports 2026-10-31)
 
@@ -45,3 +45,10 @@ Branch: `feature/cinematic-transformation` (base: master @ 6a7f55c6). Owner repo
 ## Next objectives
 
 Wave 3: design tokens → UI primitives → shell/routes → Home → detail pages → search/discover → person/seasons → lists/auth. Then Wave 4 integration, Wave 5 verification.
+
+
+## Post-verification addendum (2026-10-31)
+
+- 7 commits on `feature/cinematic-transformation` through `97e4032`.
+- Defect scoreboard: A (env untracked; rotation pending owner), B–L, M/N/O, P–V: FIXED and covered by tests or browser verification.
+- Deferred: Discover provider filter, ai-catalog.json, history purge (owner decision D6).
