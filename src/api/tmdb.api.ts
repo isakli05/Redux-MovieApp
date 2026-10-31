@@ -4,10 +4,13 @@
  *
  * - api_key: production'da query param olarak eklenir; development'ta Vite
  *   proxy (vite.config.ts) server-side enjekte eder.
- * - session_id: localStorage'daki `tmdb_user` içinde varsa eklenir (v3 user auth).
+ * - session_id ENJEKSİYONU KALDIRILDI (Wave 4, SECURITY_REMEDIATION.md):
+ *   catalog okumaları session gerektirmez; kullanıcı-yüzü çağrılar
+ *   (auth/lists/favorites/watchlist/ratings) aynı-origin BFF üzerinden
+ *   `src/api/user.api.ts` ile yapılır — v3 session'ı httpOnly cookie'de
+ *   tutulur, JS erişilebilir alanda asla bulunmaz.
  * - Hatalar tek tipleştirilir: RTK `{ status?, data? }` error + TMDB `status_code`
  *   (429 dahil) yukarı taşınır; otomatik retry YOKTUR — çağıran katmanın kararı.
- *   (BFF'e geçiş Wave 4'te; bu dosya şimdilik client-direct kalır.)
  */
 
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
@@ -34,40 +37,22 @@ export interface TmdbQueryError {
   originalError?: unknown;
 }
 
-/** localStorage'dan session_id oku; bozuk/eksik veride sessizce null döner. */
-export const readSessionId = (): string | null => {
-  try {
-    const savedUser = localStorage.getItem('tmdb_user');
-    if (!savedUser) return null;
-    const userData = JSON.parse(savedUser) as { session_id?: string | null } | null;
-    return userData?.session_id ?? null;
-  } catch {
-    return null;
-  }
-};
-
-/** URL'e api_key (sadece production) ve session_id (varsa) ekler. */
-const withAuthParams = (url: string, sessionId: string | null): string => {
-  let next = url;
+/** URL'e api_key (sadece production) ekler. Catalog okumaları session gerektirmez. */
+const withAuthParams = (url: string): string => {
   if (import.meta.env.PROD && TMDB_CONFIG.API_KEY) {
-    next += `${next.includes('?') ? '&' : '?'}api_key=${TMDB_CONFIG.API_KEY}`;
+    return `${url}${url.includes('?') ? '&' : '?'}api_key=${TMDB_CONFIG.API_KEY}`;
   }
-  if (sessionId) {
-    next += `${next.includes('?') ? '&' : '?'}session_id=${sessionId}`;
-  }
-  return next;
+  return url;
 };
 
 const rawBaseQuery = fetchBaseQuery({ baseUrl: TMDB_CONFIG.BASE_URL });
 
 const baseQuery: BaseQueryFn<string | FetchArgs, unknown, TmdbQueryError> =
   async (args, api, extraOptions) => {
-    const sessionId = readSessionId();
-
     if (typeof args === 'string') {
-      args = withAuthParams(args, sessionId);
+      args = withAuthParams(args);
     } else if (args?.url) {
-      args = { ...args, url: withAuthParams(args.url, sessionId) };
+      args = { ...args, url: withAuthParams(args.url) };
     }
 
     const result = await rawBaseQuery(args, api, extraOptions);

@@ -1,5 +1,5 @@
 import type { Season } from '../types/tvsDetails';
-import type { SeasonFilters, SeasonSortConfig, SortOption, SortOrder, StatusFilter } from '../components/Tvs/SeasonsFilterBar';
+import type { SeasonFilters, SeasonSortConfig, SortOrder, StatusFilter } from '../components/Tvs/SeasonsFilterBar';
 
 /**
  * Filter seasons by minimum rating

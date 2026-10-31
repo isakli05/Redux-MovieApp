@@ -1,58 +1,54 @@
-import { memo } from 'react';
-import { Link } from 'react-router-dom';
-import type { SeasonCastMember } from '../../types/seasonCredits';
-import { getProfileUrl } from '../../utils';
+import { memo } from 'react'
+import { Link } from 'react-router-dom'
+import type { SeasonCastMember } from '../../types/seasonCredits'
+import { getProfileUrl } from '../../utils'
 
 interface SeasonCastPreviewProps {
-  cast: SeasonCastMember[];
-  maxVisible?: number;
+  cast: SeasonCastMember[]
+  maxVisible?: number
 }
 
 const SeasonCastPreview = memo(function SeasonCastPreview({ cast, maxVisible = 5 }: SeasonCastPreviewProps) {
   if (!cast || cast.length === 0) {
-    return null;
+    return null
   }
 
-  const visibleCast = cast.slice(0, maxVisible);
-  const remainingCount = cast.length - maxVisible;
+  const visibleCast = cast.slice(0, maxVisible)
+  const remainingCount = cast.length - maxVisible
 
   return (
-    <div className="flex items-center gap-2">
-      <span className="text-slate-400 text-sm font-medium">Oyuncular:</span>
-      
+    <div className="flex items-center gap-3">
+      <span className="text-xs font-medium uppercase tracking-[0.08em] text-muted">Oyuncular</span>
+
       <div className="flex items-center -space-x-2">
         {visibleCast.map((member) => (
           <Link
             key={member.id}
             to={`/person/${member.id}`}
-            className="relative group"
-            title={member.name}
+            className="group relative rounded-full"
+            title={`${member.name}${member.roles?.[0]?.character ? ` — ${member.roles[0].character}` : ''}`}
           >
             <img
               src={getProfileUrl(member.profile_path, 'SMALL')}
               alt={member.name}
-              className="w-10 h-10 rounded-full border-2 border-slate-800 object-cover
-                         group-hover:border-cyan-400 transition-all duration-300
-                         group-hover:scale-110 group-hover:z-10"
+              className="h-10 w-10 rounded-full border-2 border-surface-base object-cover transition-colors duration-250 ease-cine group-hover:border-accent"
               loading="lazy"
+              decoding="async"
             />
           </Link>
         ))}
-        
+
         {remainingCount > 0 && (
-          <div 
-            className="w-10 h-10 rounded-full bg-slate-700 border-2 border-slate-800 
-                       flex items-center justify-center"
+          <div
+            className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-surface-base bg-surface-overlay"
             title={`${remainingCount} oyuncu daha`}
           >
-            <span className="text-xs text-slate-300 font-semibold">
-              +{remainingCount}
-            </span>
+            <span className="text-xs font-semibold tabular-nums text-secondary">+{remainingCount}</span>
           </div>
         )}
       </div>
     </div>
-  );
-});
+  )
+})
 
-export default SeasonCastPreview;
+export default SeasonCastPreview

@@ -1,170 +1,143 @@
 /**
- * useAuth Hook - Redux based
- * Authentication işlemleri için custom hook
+ * useAuth — BFF-backed client auth hook (decision D1).
+ *
+ * Public API (UNCHANGED — Navbar and the Lists pages depend on it):
+ *   { user, isLoading, isAuthenticated, login, logout }
+ *
+ * Flow:
+ * - Boot (fix M): `GET /api/auth/session` is called once per page load; the
+ *   httpOnly cookie session is validated SERVER-side before the client
+ *   believes it. A 404/failed request (plain `vite dev` without functions)
+ *   degrades to the unauthenticated state instead of crashing.
+ * - login: `POST /api/auth/request-token` → redirect to TMDB with
+ *   `redirect_to={origin}/api/auth/callback` — the callback is a SERVER
+ *   route now; the browser never sees the session id.
+ * - logout (fix N): `POST /api/auth/logout` (server deletes the TMDB session
+ *   and clears cookies) → dispatch logout locally.
+ *
+ * No session credential is stored in JS-reachable storage; the legacy
+ * `tmdb_user` localStorage entry (XSS-readable session) is proactively
+ * removed once on boot.
  */
 
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '../redux/store';
-import { setLoading, setUser, logout, loadUserFromStorage } from '../redux/slices/authSlice';
-import { useCreateRequestTokenMutation, useCreateAccessTokenMutation } from '../api';
+import {
+  bootFailed,
+  decodeProfileCookie,
+  hydrateProfile,
+  setLoading,
+  logout as logoutAction,
+  setUser,
+} from '../redux/slices/authSlice';
+import type { UserAccount } from '../api/user.api';
 
-// Global flag - tüm hook instance'ları arasında paylaşılır
-let globalCallbackProcessing = false;
-let globalProcessedToken: string | null = null;
+/** Session boot is shared across every useAuth() consumer (Navbar, pages…). */
+let bootPromise: Promise<UserAccount | null> | null = null;
+
+/** Test-only: drop the cached boot promise between test cases. */
+export function resetAuthBootForTests(): void {
+  bootPromise = null;
+}
+
+function readProfileCookie(): string | null {
+  if (typeof document === 'undefined') return null;
+  const match = /(?:^|;\s*)tmdb_profile=([^;]+)/.exec(document.cookie);
+  return match ? decodeURIComponent(match[1]) : null;
+}
+
+/** TMDB approve URL for a request token; the redirect lands on the SERVER callback. */
+export function tmdbAuthUrl(requestToken: string, origin: string): string {
+  const redirectTo = `${origin}/api/auth/callback`;
+  return (
+    `https://www.themoviedb.org/authenticate/${encodeURIComponent(requestToken)}` +
+    `?redirect_to=${encodeURIComponent(redirectTo)}`
+  );
+}
+
+async function fetchSession(): Promise<UserAccount | null> {
+  try {
+    const res = await fetch('/api/auth/session', {
+      headers: { 'x-requested-with': 'fetch' },
+    });
+    // Plain `vite dev` (no functions) returns 404 here — degrade silently.
+    if (!res.ok) return null;
+    const data = (await res.json()) as { authenticated?: boolean; account?: UserAccount };
+    return data.authenticated && data.account ? data.account : null;
+  } catch {
+    return null;
+  }
+}
 
 export const useAuth = () => {
   const dispatch = useAppDispatch();
-  const { user, isLoading, isAuthenticated } = useAppSelector((state) => state.auth);
+  const { user, isLoading, isAuthenticated, bootstrapped } = useAppSelector((state) => state.auth);
 
-  const [createRequestToken] = useCreateRequestTokenMutation();
-  const [createAccessToken] = useCreateAccessTokenMutation();
-
-  // Local ref'ler - sadece bu instance için
-  const isProcessingCallback = useRef(false);
-  const hasProcessedCallback = useRef(false);
-
-  // Local storage'dan user yükle
+  // Boot: hydrate display-only profile from the cookie, then validate the
+  // session server-side exactly once.
   useEffect(() => {
-    dispatch(loadUserFromStorage());
-  }, [dispatch]);
-
-  // URL'den callback parametrelerini kontrol et
-  useEffect(() => {
-    // Sadece callback sayfasında çalış
-    if (!window.location.pathname.includes('/auth/callback')) {
-      return;
-    }
-
-    // Global flag kontrolü - tüm instance'lar arasında paylaşılır
-    if (globalCallbackProcessing) {
-      console.log('⚠️ Callback already processing globally, skipping');
-      return;
-    }
-
-    // Zaten işlenmişse tekrar işleme
-    if (hasProcessedCallback.current || isProcessingCallback.current) {
-      console.log('⚠️ Callback already processed locally, skipping');
-      return;
-    }
-
-    const urlParams = new URLSearchParams(window.location.search);
-    const requestToken = urlParams.get('request_token');
-    const approved = urlParams.get('approved');
-
-    console.log('🔍 Callback params:', { requestToken, approved });
-
-    // Aynı token'ı tekrar işleme - global kontrol
-    if (requestToken && globalProcessedToken === requestToken) {
-      console.log('⚠️ Token already processed globally:', requestToken);
-      return;
-    }
-
-    // Token varsa ve henüz authenticated değilse işle
-    if (requestToken && !isAuthenticated && !globalCallbackProcessing) {
-      console.log('✅ Processing callback with token:', requestToken);
-
-      // Hemen flag'leri set et - hem local hem global
-      hasProcessedCallback.current = true;
-      isProcessingCallback.current = true;
-      globalCallbackProcessing = true;
-      globalProcessedToken = requestToken;
-
-      handleCallback(requestToken);
-    } else if (requestToken && isAuthenticated) {
-      console.log('⚠️ Already authenticated, skipping callback');
-    } else {
-      console.log('❌ No valid token found in callback URL');
-    }
-  }, []); // Boş dependency array - sadece mount'ta çalış
-
-  const handleCallback = async (requestToken: string) => {
-    // Zaten authenticated ise tekrar çağrı yapma
-    if (isAuthenticated) {
-      console.log('⚠️ Already authenticated, skipping callback');
-      isProcessingCallback.current = false;
-      return;
-    }
-
+    // Legacy cleanup: the old flow stored the session_id in localStorage.
     try {
-      console.log('🔄 Starting callback process...');
-      dispatch(setLoading(true));
-
-      // Step 3: Session oluştur
-      console.log('📡 Creating session with token:', requestToken);
-      const accessTokenResponse = await createAccessToken({ request_token: requestToken }).unwrap();
-      console.log('✅ Session created:', accessTokenResponse);
-      console.log('✅ Session response type:', typeof accessTokenResponse);
-      console.log('✅ Session response keys:', Object.keys(accessTokenResponse));
-
-      // Response kontrolü - success field olmayabilir
-      if (!accessTokenResponse.session_id) {
-        console.error('❌ No session_id in response:', accessTokenResponse);
-        throw new Error('Session creation failed - no session_id');
-      }
-
-      // Kullanıcı bilgilerini kaydet (v3 API)
-      const userData = {
-        id: 0, // Account details'den gelecek
-        username: '', // Account details'den gelecek
-        name: '', // Account details'den gelecek
-        session_id: accessTokenResponse.session_id,
-      };
-
-      console.log('💾 Saving user data:', userData);
-      dispatch(setUser(userData));
-      localStorage.setItem('tmdb_user', JSON.stringify(userData));
-
-      // URL'den callback parametrelerini temizle
-      window.history.replaceState({}, document.title, window.location.pathname);
-      console.log('✅ Authentication completed successfully');
-
-    } catch (error: any) {
-      console.error('❌ Callback error:', error);
-
-      // Hata mesajını göster
-      const errorMessage = error?.data?.status_message || error?.message || 'Authentication failed';
-      console.error('❌ Error details:', errorMessage);
-
-      // Hata durumunda kullanıcıyı ana sayfaya yönlendir
-      setTimeout(() => {
-        window.location.href = '/';
-      }, 2000);
-    } finally {
-      dispatch(setLoading(false));
-      isProcessingCallback.current = false;
-      globalCallbackProcessing = false; // Global flag'i de temizle
+      localStorage.removeItem('tmdb_user');
+    } catch {
+      /* storage may be unavailable — non-fatal */
     }
-  };
+
+    dispatch(hydrateProfile(decodeProfileCookie(readProfileCookie())));
+
+    if (!bootPromise) {
+      bootPromise = fetchSession();
+    }
+    let cancelled = false;
+    bootPromise
+      .then((account) => {
+        if (!cancelled) dispatch(setUser(account));
+      })
+      .catch(() => {
+        if (!cancelled) dispatch(bootFailed());
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [dispatch]);
 
   const login = useCallback(async () => {
     try {
       dispatch(setLoading(true));
+      const res = await fetch('/api/auth/request-token', {
+        method: 'POST',
+        headers: { 'x-requested-with': 'fetch' },
+      });
+      if (!res.ok) throw new Error('request-token failed');
+      const data = (await res.json()) as { request_token?: string };
+      if (!data.request_token) throw new Error('missing request token');
 
-      // Step 1: Request token oluştur
-      const requestTokenResponse = await createRequestToken({
-        redirect_to: window.location.origin + '/auth/callback'
-      }).unwrap();
-
-      // Step 2: Kullanıcıyı TMDB'ye yönlendir (v3 API)
-      const authUrl = `https://www.themoviedb.org/authenticate/${requestTokenResponse.request_token}?redirect_to=${encodeURIComponent(window.location.origin + '/auth/callback')}`;
-      console.log('🔗 Redirecting to TMDB:', authUrl);
-      window.location.href = authUrl;
-
-    } catch (error) {
-      console.error('Login error:', error);
-      dispatch(setLoading(false));
+      window.location.href = tmdbAuthUrl(data.request_token, window.location.origin);
+    } catch {
+      // Leave the UI in the unauthenticated state; the login can be retried.
+      dispatch(bootFailed());
     }
-  }, [dispatch, createRequestToken]);
+  }, [dispatch]);
 
-  const logoutUser = useCallback(() => {
-    dispatch(logout());
+  const logout = useCallback(async () => {
+    try {
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+        headers: { 'x-requested-with': 'fetch' },
+      });
+    } catch {
+      // Server unreachable: still clear local state. The cookie is cleared
+      // server-side on any successful run; local UI must not linger.
+    }
+    dispatch(logoutAction());
   }, [dispatch]);
 
   return {
     user,
     isLoading,
     isAuthenticated,
+    bootstrapped,
     login,
-    logout: logoutUser,
+    logout,
   };
 };

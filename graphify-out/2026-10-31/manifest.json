@@ -36,9 +36,9 @@
     "semantic_hash": ""
   },
   "src/Pages/Movies/Movie404.tsx": {
-    "mtime": 1793462793.9232318,
-    "seen": 1793462832.7404568,
-    "ast_hash": "e7620757d7ad5e1b7049bdf1e852e6d2",
+    "mtime": 1793472520.6886878,
+    "seen": 1793474321.3528957,
+    "ast_hash": "3df0620d11bd45017f448282677ef250",
     "semantic_hash": ""
   },
   "src/Pages/Movies/MovieCast.tsx": {
@@ -48,9 +48,9 @@
     "semantic_hash": ""
   },
   "src/Pages/Movies/MovieCollection.tsx": {
-    "mtime": 1793472398.866955,
-    "seen": 1793472432.7323587,
-    "ast_hash": "431f619bcba6378fee81d6f07b29de26",
+    "mtime": 1793472465.9047074,
+    "seen": 1793474321.3528972,
+    "ast_hash": "5165f5b2469c10dbb37be21eeb57e3a0",
     "semantic_hash": ""
   },
   "src/Pages/Movies/MovieDetail.tsx": {
@@ -132,9 +132,9 @@
     "semantic_hash": ""
   },
   "src/Pages/Tvs/Tv404.tsx": {
-    "mtime": 1793462793.9237015,
-    "seen": 1793462832.7404704,
-    "ast_hash": "1a7d3be4ea7084f7a6b3597b1338a035",
+    "mtime": 1793472520.725687,
+    "seen": 1793474321.352909,
+    "ast_hash": "425f1643db227a788cf3cbe070598b90",
     "semantic_hash": ""
   },
   "src/Pages/Tvs/TvCast.tsx": {
@@ -311,36 +311,6 @@
     "ast_hash": "251bc7fa67eed926c995b2542e959c86",
     "semantic_hash": ""
   },
-  "src/components/Movies/MovieBanner.tsx": {
-    "mtime": 1793462793.9247015,
-    "seen": 1793462832.7404907,
-    "ast_hash": "96f3c6cfc2a94126a964d4a927ff05a0",
-    "semantic_hash": ""
-  },
-  "src/components/Movies/MovieColletionBackDrop.tsx": {
-    "mtime": 1793462793.9248257,
-    "seen": 1793462832.7404912,
-    "ast_hash": "431ea51366b65789d36f1cc0780860c2",
-    "semantic_hash": ""
-  },
-  "src/components/Movies/MovieCredit.tsx": {
-    "mtime": 1793462793.9248257,
-    "seen": 1793462832.740492,
-    "ast_hash": "1ba99a34104a7b4e414087c3bb34ae47",
-    "semantic_hash": ""
-  },
-  "src/components/Movies/MovieLabel.tsx": {
-    "mtime": 1793462793.9248257,
-    "seen": 1793462832.7404926,
-    "ast_hash": "5d53d608b116f1f224b534bd169ab274",
-    "semantic_hash": ""
-  },
-  "src/components/Movies/MovieRecommendation.tsx": {
-    "mtime": 1793462793.9248257,
-    "seen": 1793462832.740493,
-    "ast_hash": "6189fb91e85f5afa30f176b56709c43f",
-    "semantic_hash": ""
-  },
   "src/components/Navbar.tsx": {
     "mtime": 1793469174.4328997,
     "seen": 1793472432.7324178,
@@ -432,21 +402,21 @@
     "semantic_hash": ""
   },
   "src/components/Tvs/TvBanner.tsx": {
-    "mtime": 1793462793.925244,
-    "seen": 1793462832.7405043,
-    "ast_hash": "b339ef2de6c596d592b35dc098a561c2",
+    "mtime": 1793473796.1689506,
+    "seen": 1793474321.3529632,
+    "ast_hash": "0d4711b4227a4e4f7d54c42ccee1bd97",
     "semantic_hash": ""
   },
   "src/components/Tvs/TvCredit.tsx": {
-    "mtime": 1793462793.925244,
-    "seen": 1793462832.7405047,
-    "ast_hash": "ee1b651dc0da1fbda1d3d6cb4a8818ca",
+    "mtime": 1793473796.20595,
+    "seen": 1793474321.3529642,
+    "ast_hash": "37c79f7cac412d1da8270f6edfacc2d4",
     "semantic_hash": ""
   },
   "src/components/Tvs/TvLabel.tsx": {
-    "mtime": 1793462793.925244,
-    "seen": 1793462832.7405057,
-    "ast_hash": "6f6a5f5b2446ff61f42ed52fac0c5251",
+    "mtime": 1793473796.2409494,
+    "seen": 1793474321.3529646,
+    "ast_hash": "25423e88073d944f28c6d5b02647acdc",
     "semantic_hash": ""
   },
   "src/components/Tvs/TvSeasonListBanner.tsx": {
@@ -1338,9 +1308,9 @@
     "semantic_hash": ""
   },
   "src/components/detail/CastHeader.tsx": {
-    "mtime": 1793471748.8170524,
-    "seen": 1793472432.7324343,
-    "ast_hash": "68bbde9e7257f1a7ef0c64d2ab8c468c",
+    "mtime": 1793473796.2769487,
+    "seen": 1793474321.352967,
+    "ast_hash": "a67cfeedfaa3ded44837c4a70a556548",
     "semantic_hash": ""
   },
   "src/components/detail/CastRail.tsx": {
@@ -1350,9 +1320,9 @@
     "semantic_hash": ""
   },
   "src/components/detail/CollectionBand.tsx": {
-    "mtime": 1793471325.7769248,
-    "seen": 1793472432.7324355,
-    "ast_hash": "adfb4ebc7f8f8593217cbdc425a47fe6",
+    "mtime": 1793473796.313948,
+    "seen": 1793474321.3529682,
+    "ast_hash": "cfd65a1dff20c104fec8e5fdb6ee60f4",
     "semantic_hash": ""
   },
   "src/components/detail/CrewRow.tsx": {
@@ -1428,9 +1398,9 @@
     "semantic_hash": ""
   },
   "src/components/detail/detail.utils.ts": {
-    "mtime": 1793470433.9205182,
-    "seen": 1793472432.7324445,
-    "ast_hash": "3f79533fbb8b39e45d63be3672549cf5",
+    "mtime": 1793473686.207997,
+    "seen": 1793474321.3529816,
+    "ast_hash": "d8eebed0f1274cb01fd0707e6338c921",
     "semantic_hash": ""
   },
   "src/components/detail/index.ts": {
@@ -1497,6 +1467,24 @@
     "mtime": 1793468453.9851112,
     "seen": 1793472432.732497,
     "ast_hash": "6f69f3877aa0ef22d5121f96e37b0c50",
+    "semantic_hash": ""
+  },
+  "src/components/detail/__tests__/DetailDossier.test.tsx": {
+    "mtime": 1793474213.3701863,
+    "seen": 1793474321.352978,
+    "ast_hash": "72c4731ba087066a33e128d85fa69c18",
+    "semantic_hash": ""
+  },
+  "src/components/detail/__tests__/WatchProvidersBlock.test.tsx": {
+    "mtime": 1793474141.0335326,
+    "seen": 1793474321.3529787,
+    "ast_hash": "0be44439323458222c35752e3427da1a",
+    "semantic_hash": ""
+  },
+  "src/components/detail/__tests__/detail.utils.test.ts": {
+    "mtime": 1793474148.1963992,
+    "seen": 1793474321.3529794,
+    "ast_hash": "e6b65c4ce1868c1a4fda8296d9078795",
     "semantic_hash": ""
   }
 }

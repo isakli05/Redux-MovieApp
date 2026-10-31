@@ -1,239 +1,304 @@
-import { useParams } from 'react-router-dom';
+import { useMemo, useState } from 'react'
+import { useParams } from 'react-router-dom'
+import { ArrowTopRightOnSquareIcon } from '@heroicons/react/24/outline'
+import { useGetPersonDetailsQuery } from '@/api/endpoints/persons.endpoints'
+import { useSEO } from '@hooks/useSEO'
 import {
-  UserIcon,
-  CalendarIcon,
-  MapPinIcon,
-  BriefcaseIcon,
-  GlobeAltIcon,
-  HeartIcon,
-} from '@heroicons/react/24/outline';
-import { useGetPersonDetailsQuery } from '../../api/endpoints/persons.endpoints';
-import { getProfileUrl, formatDate } from '../../utils';
-import Loading from '../../components/Loading';
-import PersonMovies from '../../components/Persons/PersonMovies';
-import MediaGallery from '../../components/MediaGallery/MediaGallery';
+  Button,
+  Chip,
+  EmptyState,
+  ErrorState,
+  MediaRail,
+  PosterCard,
+  SectionHeader,
+  Skeleton,
+  Tabs,
+} from '@components/ui'
+import MediaGallery from '@components/MediaGallery/MediaGallery'
+import { ExpandableBio } from '@components/Persons/ExpandableBio'
+import { CreditGroup } from '@components/Persons/CreditGroup'
+import {
+  buildExternalLinks,
+  calcAge,
+  departmentLabel,
+  mostKnownCredits,
+  sortCredits,
+  unifyMovieCredits,
+  unifyTvCredits,
+} from '@components/Persons/personCredits'
+import type { CreditSortMode, PersonDetailFull } from '@components/Persons/personCredits'
+import { formatDate } from '@utils/date.utils'
+import { getProfileUrl, posterSrcset } from '@utils/image.utils'
+import Person404 from './Person404'
 
-function PersonDetails() {
-  const { cast_id } = useParams();
-  
-  const { data: cast, isLoading, error } = useGetPersonDetailsQuery(cast_id!, {
-    skip: !cast_id,
-  });
+const SORT_OPTIONS: { id: CreditSortMode; label: string }[] = [
+  { id: 'year-desc', label: 'Yıl · Yeni → Eski' },
+  { id: 'year-asc', label: 'Yıl · Eski → Yeni' },
+  { id: 'popularity', label: 'Popülerlik' },
+]
 
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <div className="text-red-400 text-6xl mb-4">⚠️</div>
-          <p className="text-red-400 text-xl font-semibold">Kişi bilgileri yüklenirken bir hata oluştu</p>
-          <p className="text-slate-400">Lütfen daha sonra tekrar deneyin</p>
+function Fact({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <dt className="text-xs font-medium uppercase tracking-[0.08em] text-secondary">{label}</dt>
+      <dd className="mt-1 text-sm text-primary">{value}</dd>
+    </div>
+  )
+}
+
+/** Branded loading placeholder matching the hero layout. */
+function PersonDetailsSkeleton() {
+  return (
+    <div
+      className="mx-auto w-full max-w-[1440px] px-4 pb-16 pt-10 sm:px-6 md:pt-16 lg:px-8"
+      role="status"
+      aria-live="polite"
+    >
+      <div className="grid gap-8 lg:grid-cols-[280px_minmax(0,1fr)] xl:grid-cols-[320px_minmax(0,1fr)]">
+        <Skeleton variant="poster" className="aspect-[2/3] w-full max-w-[320px] rounded-xl" />
+        <div className="space-y-4">
+          <Skeleton variant="section" className="w-40" />
+          <Skeleton variant="section" className="w-3/4" />
+          <Skeleton variant="line" className="w-1/3" />
+          <div className="grid gap-4 rounded-lg border border-line bg-surface-base p-5 sm:grid-cols-2">
+            <Skeleton variant="line" className="w-24" />
+            <Skeleton variant="line" className="w-40" />
+            <Skeleton variant="line" className="w-24" />
+            <Skeleton variant="line" className="w-48" />
+          </div>
         </div>
       </div>
-    );
+      <span className="sr-only">Kişi bilgileri yükleniyor…</span>
+    </div>
+  )
+}
+
+function PersonDetails() {
+  const { cast_id: castId } = useParams()
+  const { data, isLoading, error, refetch } = useGetPersonDetailsQuery(castId ?? '', {
+    skip: !castId,
+  })
+  const person = data as PersonDetailFull | undefined
+
+  const bioDescription = useMemo(() => {
+    if (!person?.biography) return undefined
+    const normalized = person.biography.replace(/\s+/g, ' ').trim()
+    return normalized.length > 160 ? `${normalized.slice(0, 157)}…` : normalized
+  }, [person?.biography])
+
+  useSEO({
+    title: person?.name,
+    description:
+      bioDescription ??
+      (person ? `${person.name} — filmleri, dizileri ve kariyer bilgileri` : undefined),
+    image: person?.profile_path ?? null,
+  })
+
+  const [activeTab, setActiveTab] = useState<'movie' | 'tv'>('movie')
+  const [sortMode, setSortMode] = useState<CreditSortMode>('year-desc')
+
+  const movieCredits = useMemo(
+    () => unifyMovieCredits(person?.movie_credits?.cast, person?.movie_credits?.crew),
+    [person],
+  )
+  const tvCredits = useMemo(
+    () => unifyTvCredits(person?.tv_credits?.cast, person?.tv_credits?.crew),
+    [person],
+  )
+  const knownFor = useMemo(() => (person ? mostKnownCredits(person, 12) : []), [person])
+
+  if (error) {
+    const status = 'status' in error ? (error.status as number) : undefined
+    if (status === 404) return <Person404 />
+    return (
+      <div className="mx-auto flex min-h-[60vh] w-full max-w-[1440px] items-center justify-center px-4 sm:px-6 lg:px-8">
+        <ErrorState
+          title="Kişi yüklenemedi"
+          message="Kişi bilgileri yüklenirken bir hata oluştu. Lütfen daha sonra tekrar deneyin."
+          onRetry={refetch}
+          backTo="/person"
+          backLabel="Popüler Kişilere Dön"
+        />
+      </div>
+    )
   }
 
-  if (isLoading || !cast) {
-    return <Loading />;
+  if (isLoading || !person) {
+    return <PersonDetailsSkeleton />
   }
 
-  const calculateAge = (birthday: string, deathday?: string) => {
-    const birth = new Date(birthday);
-    const end = deathday ? new Date(deathday) : new Date();
-    let age = end.getFullYear() - birth.getFullYear();
-    const monthDiff = end.getMonth() - birth.getMonth();
-    if (monthDiff < 0 || (monthDiff === 0 && end.getDate() < birth.getDate())) {
-      age--;
-    }
-    return age;
-  };
+  const movieCast = sortCredits(movieCredits.filter((c) => c.isCast), sortMode)
+  const movieCrew = sortCredits(movieCredits.filter((c) => !c.isCast), sortMode)
+  const tvCast = sortCredits(tvCredits.filter((c) => c.isCast), sortMode)
+  const tvCrew = sortCredits(tvCredits.filter((c) => !c.isCast), sortMode)
 
-  // Cinsiyet bazlı renk teması
-  const isMale = cast.gender === 2;
-  const colorTheme = {
-    // Arka plan gradient orbs
-    orbLeft: isMale ? 'bg-blue-500/10' : 'bg-purple-500/10',
-    orbRight: isMale ? 'bg-cyan-500/10' : 'bg-pink-500/10',
-    // Profil görsel efekti
-    profileGlow: isMale ? 'from-blue-500 to-cyan-500' : 'from-purple-500 to-pink-500',
-    // İsim ve icon arka plan gradient'i
-    iconBg: isMale ? 'from-blue-400 to-cyan-500' : 'from-purple-400 to-pink-500',
-    nameGradient: isMale ? 'from-blue-400 to-cyan-400' : 'from-purple-400 to-pink-400',
-    // İkon renkleri
-    iconColor: isMale ? 'text-blue-400' : 'text-purple-400',
-    // Card hover border
-    cardHover: isMale ? 'hover:border-blue-500/50' : 'hover:border-purple-500/50',
-    // Biyografi gradient çubuğu
-    bioBar: isMale ? 'from-blue-400 to-cyan-500' : 'from-purple-400 to-pink-500',
-    // Website link rengi
-    linkColor: isMale ? 'text-blue-400 hover:text-blue-300' : 'text-purple-400 hover:text-purple-300',
-  };
+  const tabs = [
+    ...(movieCredits.length > 0
+      ? [{ id: 'movie', label: `Filmler (${movieCredits.length.toLocaleString('tr-TR')})` }]
+      : []),
+    ...(tvCredits.length > 0
+      ? [{ id: 'tv', label: `Diziler (${tvCredits.length.toLocaleString('tr-TR')})` }]
+      : []),
+  ]
+  const effectiveTab = tabs.some((t) => t.id === activeTab) ? activeTab : (tabs[0]?.id as 'movie' | 'tv')
+
+  const age = calcAge(person.birthday, person.deathday)
+  const ageAtDeath = person.deathday ? calcAge(person.birthday, person.deathday) : null
+  const externalLinks = buildExternalLinks(person)
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900">
-      {/* Header Section */}
-      <div className="relative overflow-hidden">
-        <div className={`absolute top-0 -left-4 w-96 h-96 ${colorTheme.orbLeft} rounded-full blur-3xl`} />
-        <div className={`absolute top-0 -right-4 w-96 h-96 ${colorTheme.orbRight} rounded-full blur-3xl`} />
-        
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Profile Image */}
-            <div className="lg:col-span-1">
-              <div className="sticky top-20">
-                <div className="relative group">
-                  <div className={`absolute -inset-1 bg-gradient-to-r ${colorTheme.profileGlow} rounded-2xl blur-lg opacity-50 group-hover:opacity-75 transition duration-300`} />
-                  <img
-                    loading="lazy"
-                    src={getProfileUrl(cast.profile_path)}
-                    alt={cast.name}
-                    className="relative w-full rounded-xl shadow-2xl object-cover"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Info */}
-            <div className="lg:col-span-2 space-y-8">
-              {/* Name */}
-              <div className="space-y-2">
-                <div className="flex items-center gap-3">
-                  <div className={`bg-gradient-to-br ${colorTheme.iconBg} p-3 rounded-xl shadow-lg`}>
-                    <UserIcon className="h-8 w-8 text-white" />
-                  </div>
-                  <h1 className={`text-4xl md:text-5xl lg:text-6xl font-bold bg-gradient-to-r ${colorTheme.nameGradient} bg-clip-text text-transparent`}>
-                    {cast.name}
-                  </h1>
-                </div>
-              </div>
-
-              {/* Personal Info Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Known For */}
-                <div className={`bg-slate-800/50 backdrop-blur-lg border border-slate-700/50 rounded-xl p-6 ${colorTheme.cardHover} transition-all duration-300`}>
-                  <div className="flex items-center gap-3 mb-2">
-                    <BriefcaseIcon className={`h-5 w-5 ${colorTheme.iconColor}`} />
-                    <h3 className="font-semibold text-slate-300">Bilinen İşi</h3>
-                  </div>
-                  <p className="text-white text-lg font-medium">
-                    {cast.known_for_department === 'Acting' ? 'Oyunculuk' : cast.known_for_department}
-                  </p>
-                </div>
-
-                {/* Gender */}
-                <div className={`bg-slate-800/50 backdrop-blur-lg border border-slate-700/50 rounded-xl p-6 ${colorTheme.cardHover} transition-all duration-300`}>
-                  <div className="flex items-center gap-3 mb-2">
-                    <UserIcon className={`h-5 w-5 ${colorTheme.iconColor}`} />
-                    <h3 className="font-semibold text-slate-300">Cinsiyet</h3>
-                  </div>
-                  <p className="text-white text-lg font-medium">
-                    {cast.gender === 1 ? 'Kadın' : cast.gender === 2 ? 'Erkek' : 'Belirtilmemiş'}
-                  </p>
-                </div>
-
-                {/* Birthday */}
-                {cast.birthday && (
-                  <div className={`bg-slate-800/50 backdrop-blur-lg border border-slate-700/50 rounded-xl p-6 ${colorTheme.cardHover} transition-all duration-300`}>
-                    <div className="flex items-center gap-3 mb-2">
-                      <CalendarIcon className={`h-5 w-5 ${colorTheme.iconColor}`} />
-                      <h3 className="font-semibold text-slate-300">Doğum Tarihi</h3>
-                    </div>
-                    <p className="text-white text-lg font-medium">
-                      {formatDate(cast.birthday, { year: 'numeric', month: 'long', day: 'numeric' })}
-                    </p>
-                    <p className="text-slate-400 text-sm mt-1">
-                      ({calculateAge(cast.birthday, cast.deathday)} yaşında{cast.deathday && ' vefat etti'})
-                    </p>
-                  </div>
-                )}
-
-                {/* Place of Birth */}
-                {cast.place_of_birth && (
-                  <div className={`bg-slate-800/50 backdrop-blur-lg border border-slate-700/50 rounded-xl p-6 ${colorTheme.cardHover} transition-all duration-300`}>
-                    <div className="flex items-center gap-3 mb-2">
-                      <MapPinIcon className={`h-5 w-5 ${colorTheme.iconColor}`} />
-                      <h3 className="font-semibold text-slate-300">Doğum Yeri</h3>
-                    </div>
-                    <p className="text-white text-lg font-medium">{cast.place_of_birth}</p>
-                  </div>
-                )}
-
-                {/* Deathday */}
-                {cast.deathday && (
-                  <div className={`bg-slate-800/50 backdrop-blur-lg border border-slate-700/50 rounded-xl p-6 ${colorTheme.cardHover} transition-all duration-300`}>
-                    <div className="flex items-center gap-3 mb-2">
-                      <HeartIcon className="h-5 w-5 text-red-400" />
-                      <h3 className="font-semibold text-slate-300">Vefat Tarihi</h3>
-                    </div>
-                    <p className="text-white text-lg font-medium">
-                      {formatDate(cast.deathday, { year: 'numeric', month: 'long', day: 'numeric' })}
-                    </p>
-                  </div>
-                )}
-
-                {/* Homepage */}
-                {cast.homepage && (
-                  <div className={`bg-slate-800/50 backdrop-blur-lg border border-slate-700/50 rounded-xl p-6 ${colorTheme.cardHover} transition-all duration-300 md:col-span-2`}>
-                    <div className="flex items-center gap-3 mb-2">
-                      <GlobeAltIcon className={`h-5 w-5 ${colorTheme.iconColor}`} />
-                      <h3 className="font-semibold text-slate-300">Website</h3>
-                    </div>
-                    <a
-                      href={cast.homepage}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={`inline-flex items-center gap-2 ${colorTheme.linkColor} transition-colors text-lg font-medium`}
-                    >
-                      <span>Websiteyi Ziyaret Et</span>
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                      </svg>
-                    </a>
-                  </div>
-                )}
-              </div>
-
-              {/* Biography */}
-              {cast.biography && (
-                <div className="bg-slate-800/50 backdrop-blur-lg border border-slate-700/50 rounded-2xl p-8 shadow-xl">
-                  <div className="flex items-center gap-3 mb-6">
-                    <div className={`w-1 h-8 bg-gradient-to-b ${colorTheme.bioBar} rounded-full`} />
-                    <h2 className="text-2xl md:text-3xl font-bold text-white">Biyografi</h2>
-                  </div>
-                  <div className="prose prose-invert max-w-none">
-                    <p className="text-slate-300 leading-relaxed whitespace-pre-line text-lg">
-                      {cast.biography}
-                    </p>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Media Gallery Section */}
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-            <MediaGallery
-              mediaType="person"
-              id={cast_id!}
-              defaultTab="profiles"
-              gender={cast.gender}
+    <article className="mx-auto w-full max-w-[1440px] px-4 pb-16 pt-10 sm:px-6 md:pt-16 lg:px-8">
+      {/* Profile hero */}
+      <div className="grid gap-8 lg:grid-cols-[280px_minmax(0,1fr)] xl:grid-cols-[320px_minmax(0,1fr)]">
+        <div>
+          {person.profile_path ? (
+            <img
+              src={getProfileUrl(person.profile_path, 'LARGE')}
+              srcSet={posterSrcset(person.profile_path)}
+              sizes="(max-width: 1024px) 45vw, 320px"
+              alt={`${person.name} profili`}
+              loading="eager"
+              decoding="async"
+              fetchPriority="high"
+              className="aspect-[2/3] w-full max-w-[320px] rounded-xl border border-line object-cover"
             />
-          </div>
-
-          {/* Filmography Section */}
-          {(cast.movie_credits || cast.tv_credits) && (
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-              <PersonMovies
-                movieCredits={cast.movie_credits?.cast}
-                tvCredits={cast.tv_credits?.cast}
-                personName={cast.name}
-                isMale={cast.gender === 2}
-              />
+          ) : (
+            <div className="flex aspect-[2/3] w-full max-w-[320px] flex-col items-center justify-center rounded-xl border border-line bg-surface-raised p-6 text-center">
+              <span aria-hidden="true" className="font-display text-6xl font-semibold text-secondary">
+                {person.name.trim().charAt(0).toLocaleUpperCase('tr-TR')}
+              </span>
+              <span className="mt-3 text-sm text-muted">{person.name}</span>
             </div>
           )}
         </div>
+
+        <div className="min-w-0">
+          <p className="mb-2 text-xs font-medium uppercase tracking-[0.08em] text-accent">Kişi</p>
+          <h1 className="font-display text-4xl font-semibold leading-tight tracking-tight text-primary sm:text-5xl">
+            {person.name}
+          </h1>
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center rounded-full border border-line bg-surface-overlay px-3 py-1.5 text-sm font-medium text-secondary">
+              {departmentLabel(person.known_for_department)}
+            </span>
+          </div>
+
+          {/* Facts panel */}
+          {(person.birthday || person.place_of_birth || person.deathday) && (
+          <dl className="mt-6 grid gap-4 rounded-lg border border-line bg-surface-base p-5 sm:grid-cols-2">
+            {person.birthday && (
+              <Fact
+                label="Doğum"
+                value={`${formatDate(person.birthday)}${
+                  age !== null && !person.deathday ? ` (${age} yaşında)` : ''
+                }`}
+              />
+            )}
+            {person.place_of_birth && <Fact label="Doğum Yeri" value={person.place_of_birth} />}
+            {person.deathday && (
+              <Fact
+                label="Vefat"
+                value={`${formatDate(person.deathday)}${
+                  ageAtDeath !== null ? ` (${ageAtDeath} yaşında vefat etti)` : ''
+                }`}
+              />
+            )}
+          </dl>
+          )}
+
+          {/* External links */}
+          <div className="mt-6 flex flex-wrap gap-2">
+            {externalLinks.map((link) => (
+              <a
+                key={link.key}
+                href={link.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex h-8 items-center gap-1.5 rounded-md border border-line-strong px-3 text-sm font-medium text-primary transition-colors duration-150 ease-cine hover:border-accent hover:text-accent"
+              >
+                {link.label}
+                <ArrowTopRightOnSquareIcon className="h-3.5 w-3.5" aria-hidden="true" />
+              </a>
+            ))}
+          </div>
+        </div>
       </div>
-    </div>
-  );
+
+      {/* Biography */}
+      {person.biography ? (
+        <section className="mt-14">
+          <SectionHeader title="Biyografi" eyebrow="Hikâye" as="h2" />
+          <ExpandableBio text={person.biography} />
+        </section>
+      ) : null}
+
+      {/* Most known works */}
+      {knownFor.length > 0 && (
+        <MediaRail title="En Bilinen İşler" eyebrow="Öne Çıkanlar" className="mt-14">
+          {knownFor.map((item) => (
+            <PosterCard key={`${item.media_type}-${item.id}`} item={item} size="sm" />
+          ))}
+        </MediaRail>
+      )}
+
+      {/* Credits */}
+      {tabs.length > 0 ? (
+        <section className="mt-14">
+          <SectionHeader title="Kariyer" eyebrow="Krediler" as="h2" />
+          <Tabs
+            tabs={tabs}
+            activeId={effectiveTab}
+            onChange={(id) => setActiveTab(id as 'movie' | 'tv')}
+            aria-label="Kredi türü"
+          >
+            <div className="mb-2 flex flex-wrap items-center gap-2">
+              <span className="text-xs font-medium uppercase tracking-[0.08em] text-secondary">
+                Sırala
+              </span>
+              {SORT_OPTIONS.map((option) => (
+                <Chip
+                  key={option.id}
+                  active={sortMode === option.id}
+                  onClick={() => setSortMode(option.id)}
+                >
+                  {option.label}
+                </Chip>
+              ))}
+            </div>
+
+            {effectiveTab === 'movie' ? (
+              <>
+                <CreditGroup title="Oyunculuk" credits={movieCast} />
+                <CreditGroup title="Ekip" credits={movieCrew} />
+              </>
+            ) : (
+              <>
+                <CreditGroup title="Oyunculuk" credits={tvCast} />
+                <CreditGroup title="Ekip" credits={tvCrew} />
+              </>
+            )}
+          </Tabs>
+        </section>
+      ) : (
+        <section className="mt-14">
+          <EmptyState
+            title="Kredi bulunamadı"
+            hint="Bu kişi için henüz film veya dizi kaydı bulunmuyor."
+            action={
+              <Button variant="outline" size="sm" to="/person">
+                Popüler Kişiler
+              </Button>
+            }
+          />
+        </section>
+      )}
+
+      {/* Profile images gallery (legacy component; restyled by the media-gallery stream) */}
+      <div className="mt-14">
+        <MediaGallery mediaType="person" id={String(person.id)} defaultTab="profiles" />
+      </div>
+    </article>
+  )
 }
 
-export default PersonDetails;
+export default PersonDetails
