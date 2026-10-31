@@ -82,7 +82,7 @@ export function PosterCard({
       to={detailPath(item)}
       className={`group/card block ${widthBySize[size]} ${className}`}
     >
-      <div className="relative aspect-[2/3] overflow-hidden rounded-lg border border-line bg-surface-raised transition-[transform,border-color] duration-250 ease-cine hover:border-accent hover:-translate-y-1 hover:scale-[1.03]">
+      <div className="relative aspect-[2/3] overflow-hidden rounded-lg border border-line-strong bg-surface-raised transition-[transform,border-color] duration-250 ease-cine hover:border-accent hover:-translate-y-1 hover:scale-[1.03]">
         {item.poster_path ? (
           <img
             src={getPosterUrl(item.poster_path, urlSizeBySize[size])}

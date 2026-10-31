@@ -1,82 +1,55 @@
-import { Link, useLocation, useParams } from 'react-router-dom';
-import { useGetTVShowsByKeywordQuery } from '../../api/endpoints/tv.endpoints';
-import { getPosterUrl, createSlug, formatDate, truncateText, extractIdFromSlug } from '../../utils';
-import Loading from '../../components/Loading';
+/**
+ * /keyword/:key_id/tv — Anahtar kelimeyle etiketlenmiş diziler.
+ * Rota/parametre contract'ı korunur (slug'dan id + etiket çıkarımı);
+ * liste, paylaşılan CatalogPage'in hibrit yükleme+biriktirme davranışına taşındı
+ * (eski sayfa yalnızca 1. sayfayı gösteriyordu, defect Q).
+ */
+
+import { useLocation, useParams } from 'react-router-dom';
+import { useGetTVShowsByKeywordQuery } from '@api/index';
+import { CatalogPage } from '@components/catalog/CatalogPage';
+import { useSEO } from '@hooks/useSEO';
+import { extractIdFromSlug } from '@utils/slug.utils';
+
+/** Slug'dan kalan kısımdan okunabilir etiket üretir. */
+function labelFromSlug(pathname: string): string {
+  const secondSegment = pathname.split('/')[2] ?? '';
+  const parts = secondSegment.split('-').slice(1);
+  return parts.filter((part) => part && part !== 'undefined').join(' ');
+}
+
+const capitalizeTr = (value: string): string =>
+  value ? value.charAt(0).toLocaleUpperCase('tr-TR') + value.slice(1) : value;
 
 function TvKeyList() {
-  const { key_id } = useParams();
+  const { key_id: keySlug } = useParams();
   const location = useLocation();
-  const keywordId = extractIdFromSlug(key_id);
+  const keywordId = extractIdFromSlug(keySlug);
+  const label = labelFromSlug(location.pathname);
+  const pageTitle = label ? `${capitalizeTr(label)} Dizileri` : 'Anahtar Kelime Dizileri';
 
-  // Extract label from URL path
-  const pathParts = location.pathname.split('/')[2].split('-').slice(1);
-  const label = pathParts.filter(part => part !== 'undefined').join(' ');
+  useSEO({ title: pageTitle, description: 'Anahtar kelimeyle etiketlenmiş diziler — LMDB.' });
 
-  const { data: tvKeyList, isLoading } = useGetTVShowsByKeywordQuery(
-    { keywordId: keywordId! },
-    { skip: !keywordId }
-  );
-
-  if (isLoading) {
-    return <Loading />;
+  // Sayfa bağımsız bağlı hook: CatalogPage page argümanını yönetir; keywordId
+  // değişirse resetKey üzerinden birikim sıfırlanır.
+  function useKeywordPage(page: number) {
+    return useGetTVShowsByKeywordQuery(
+      { keywordId: keywordId!, page },
+      { skip: !keywordId },
+    );
   }
 
   return (
-    <div className="min-h-screen bg-slate-900">
-      {/* Header */}
-      <div className="w-full bg-cyan-900 p-5 mb-5">
-        <div className="container mx-auto">
-          <h1 className="flex justify-between items-center text-2xl md:text-3xl font-medium text-white">
-            <span className="capitalize">{label || 'Keyword Dizileri'}</span>
-            <span>{tvKeyList?.total_results || 0} dizi</span>
-          </h1>
-        </div>
-      </div>
-
-      {/* TV Shows List */}
-      <div className="container mx-auto px-4">
-        <div className="space-y-6">
-          {tvKeyList?.results.map((tv) => (
-            <Link
-              key={tv.id}
-              to={`/tv/${createSlug(tv.id, tv.original_name)}`}
-              className="flex flex-col md:flex-row gap-4 p-4 bg-slate-800 rounded-lg hover:bg-slate-700 transition-colors group"
-            >
-              {/* Poster */}
-              <div className="flex-shrink-0">
-                <img
-                  loading="lazy"
-                  className="h-48 w-32 md:h-36 md:w-24 rounded-md object-cover mx-auto"
-                  src={getPosterUrl(tv.poster_path)}
-                  alt={tv.name}
-                />
-              </div>
-
-              {/* Info */}
-              <div className="flex-1 space-y-2">
-                <h2 className="text-xl md:text-2xl font-medium text-gray-100 group-hover:text-cyan-400 transition-colors">
-                  {tv.name}
-                </h2>
-                <p className="text-gray-400 text-sm">
-                  {formatDate(tv.first_air_date)}
-                </p>
-                {tv.overview && (
-                  <p className="leading-relaxed text-gray-300">
-                    {truncateText(tv.overview, 260)}
-                  </p>
-                )}
-              </div>
-            </Link>
-          ))}
-        </div>
-
-        {tvKeyList?.results.length === 0 && (
-          <div className="text-center py-12">
-            <p className="text-gray-400 text-lg">Bu anahtar kelimeyle ilgili dizi bulunamadı.</p>
-          </div>
-        )}
-      </div>
-    </div>
+    <CatalogPage
+      eyebrow="Anahtar Kelime"
+      title={pageTitle}
+      description="Bu anahtar kelimeyle etiketlenmiş diziler"
+      mediaType="tv"
+      usePageQuery={useKeywordPage}
+      resetKey={keywordId ?? ''}
+      emptyTitle="Dizi bulunamadı"
+      emptyHint="Bu anahtar kelimeyle etiketlenmiş dizi bulunamadı."
+    />
   );
 }
 
