@@ -1,4 +1,5 @@
 export * from './BackdropHero'
+export * from './CinematicCursor'
 export * from './Button'
 export * from './Chip'
 export * from './EmptyState'

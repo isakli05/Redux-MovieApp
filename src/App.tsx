@@ -10,6 +10,7 @@ import {
   useRouteError,
 } from 'react-router-dom';
 import Navbar from './components/Navbar';
+import { CinematicCursor } from './components/ui';
 import Footer from './components/Footer';
 import NotFound from './components/NotFound';
 import { ErrorState, Skeleton } from './components/ui';
@@ -90,6 +91,7 @@ function Layout() {
         </Suspense>
       </main>
       <Footer />
+      <CinematicCursor />
     </div>
   );
 }
