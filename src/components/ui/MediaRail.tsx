@@ -34,11 +34,11 @@ const chevronClasses =
 
 /**
  * Horizontal scroll-snap rail with SectionHeader and desktop chevrons (scroll
- * by 80% of the rail width). No Swiper (spec §5). Negative gutters make the
- * rail bleed to the viewport edge inside pages that use the spec gutters
- * (px-4 sm:px-6 lg:px-8). Edges cut content cleanly — no overlay gradients
- * (owner feedback: painted-on edge fades read as shadows over posters);
- * chevrons carry the scroll affordance.
+ * by 80% of the rail width). No Swiper (spec §5). The rail aligns with the
+ * page gutters (no edge bleed — cut posters read as rendering errors), and the
+ * scrollport carries pt-4 breathing room: overflow-x:auto forces overflow-y
+ * to auto, which would otherwise CLIP the hover lift/scale at the top edge
+ * (the "border-top disappears on hover" bug). No overlay gradients.
  */
 export function MediaRail({
   title,
@@ -68,7 +68,7 @@ export function MediaRail({
         <ul
           ref={listRef}
           role="list"
-          className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 scrollbar-hide sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8"
+          className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-2 pt-4 scrollbar-hide"
         >
           {Children.map(children, (child, index) => (
             <li key={index} className="shrink-0 snap-start">
