@@ -1,126 +1,60 @@
-# 🎬 Redux Movie App
+# 🎬 LMDB — Film ve Dizi Keşif Platformu
 
-Modern React, TypeScript, Redux Toolkit ve TailwindCSS kullanılarak geliştirilmiş TMDB API v4 destekli film ve dizi uygulaması.
+"Cinematic Atlas" tasarım diliyle yeniden tasarlanmış, TMDB verileriyle çalışan film ve dizi keşif uygulaması. React 18 + TypeScript + Redux Toolkit (RTK Query) + Tailwind CSS + Vite.
 
 [🚀 Canlı Demo](https://isa-kaya-movieapp.netlify.app/)
 
-![react redux ts movie App jpeg](movieapp.jpeg)
-
 ## ✨ Özellikler
 
-- 🎭 **Film ve Dizi Kataloğu**: Popüler, yakında gelecek ve gösterimdeki içerikler
-- 🔍 **Gelişmiş Arama**: Film, dizi ve kişi araması
-- 👥 **Kişi Detayları**: Oyuncu ve yönetmen bilgileri
-- 🎬 **Detaylı İçerik**: Fragmanlar, kadro, öneriler
-- 📱 **Responsive Tasarım**: Tüm cihazlarda mükemmel görünüm
-- ⚡ **Hızlı Performans**: RTK Query ile optimize edilmiş API çağrıları
+- 🎞️ **Sinematik ana sayfa**: Trend olanlar, vizyondakiler, eleştirmenlerin seçtikleri, gizli cevherler ve bölgenize göre ücretsiz izlenebilirler
+- 📄 **Film/Dizi dosya sayfaları**: Fragmanlar, kadro, yayın platformları (bölgeye göre, JustWatch atıflı), öneriler, anahtar sözcükler
+- 🔍 **Gelişmiş arama**: ⌘K komut paleti, TR+EN birleşik sonuçlar, gerçek sonuç sayıları, sayfalama
+- 🧭 **Keşfet** (`/kesfet`): Tür, yıl, puan, dil ve sıralama filtreleri — URL'de saklanır, paylaşılabilir
+- 👥 **Kişi sayfaları**: Biyografi, filmografi (film/dizi sekmeleri, sıralanabilir), dış bağlantılar
+- 📺 **Sezon & bölüm deneyimi**: Filtreler, istatistikler, spoiler koruması, tembel yüklenen medya
+- 📋 **Listeler & hesap**: TMDB hesabıyla giriş, liste oluştur/düzenle/sil, öğe ekle-çıkar
+- ♿ **Erişilebilirlik**: WCAG 2.2 AA hedefi, klavye desteği, reduced-motion, Lighthouse Accessibility 100
+- ⚡ **Performans**: Rota bazlı code-splitting (825→504 kB giriş paketi), srcset ile boyutlandırılmış görseller, CLS ~0.02
 
-## 🛠️ Teknoloji Stack'i
+## 🛠️ Teknoloji
 
-- **Frontend**: React 18 + TypeScript
-- **State Management**: Redux Toolkit + RTK Query
-- **Styling**: TailwindCSS
-- **Build Tool**: Vite
-- **API**: TMDB API v4
-- **Deployment**: Netlify
+- **Frontend**: React 18, TypeScript, React Router 7 (lazy routes)
+- **State**: Redux Toolkit + RTK Query
+- **Stil**: Tailwind CSS (Cinematic Atlas token sistemi; Fraunces + Inter latin-ext)
+- **Build**: Vite 6, Vitest + React Testing Library (259 test)
+- **API**: **TMDB v3** — katalog okumaları istemciden doğrudan; kimlik doğrulama ve kullanıcı işlemleri (oturum, listeler, favoriler, izleme listesi, puanlar) Netlify Functions üzerindeki güvenli BFF proxy'sinden (`/api/*`, httpOnly çerez oturumu) geçer
+- **Dağıtım**: Netlify (SPA + standart Functions)
+
+## 🔐 Güvenlik modeli
+
+- Kullanıcı oturumu (`session_id`) yalnızca sunucuda (Netlify Functions), httpOnly+Secure+SameSite=Lax çerezde tutulur; istemci JS'i oturum kimlik bilgisine erişemez.
+- `TMDB_API_KEY` sunucu tarafı ortam değişkenidir, depoya commit edilmez. İstemci gömülü `VITE_TMDB_API_KEY` (v3 okuma anahtarı) TMDB'nin genel istemci tasarımına uygundur; sızmış önceki değerler döndürülmüştür.
+- CSP, HSTS, Permissions-Policy başlıkları `netlify.toml` içinde tanımlıdır.
 
 ## 🚀 Kurulum
 
-### Gereksinimler
-- Node.js >= 18.0.0
-- npm >= 9.0.0
-
-### Adımlar
-
-1. **Repository'yi klonlayın**
-```bash
-git clone https://github.com/your-username/Redux-MovieApp.git
-cd Redux-MovieApp
-```
-
-2. **Bağımlılıkları yükleyin**
 ```bash
 npm install
-```
-
-3. **Environment variables'ları ayarlayın**
-```bash
-cp .env.example .env
-```
-
-4. **TMDB API v4 Access Token'ınızı alın**
-   - [TMDB Developer Portal](https://developer.themoviedb.org/v4/docs/getting-started) adresine gidin
-   - Yeni bir API key oluşturun
-   - Access Token'ınızı `.env` dosyasına ekleyin:
-
-```env
-VITE_TMDB_ACCESS_TOKEN=your_access_token_here
-VITE_TMDB_LANGUAGE=tr-TR
-```
-
-5. **Uygulamayı başlatın**
-```bash
+cp .env.example .env   # VITE_TMDB_API_KEY değerini kendi anahtarınızla doldurun
 npm run dev
 ```
 
-## 🔧 TMDB API v4 Geçişi
+Kullanıcı akışlarını (giriş/listeler) yerelde denemek için: `.env` içine `TMDB_API_KEY` ekleyip `netlify dev` çalıştırın (Functions yalnızca Netlify CLI ile ayağa kalkar; düz `vite dev`'de arayüz girişsiz durumda sorunsuz çalışır).
 
-Bu proje TMDB API v4'ü kullanmaktadır. v3'ten v4'e geçiş için yapılan değişiklikler:
+### Komutlar
 
-### Ana Değişiklikler
-- **Authentication**: API Key → Bearer Token
-- **Base URL**: `/3` → `/4`
-- **Headers**: Authorization header kullanımı
+| Komut | Açıklama |
+|---|---|
+| `npm run dev` | Vite geliştirme sunucusu |
+| `npm run build` | Tip kontrolü + üretim derlemesi |
+| `npm run typecheck` | `tsc --noEmit` |
+| `npm run lint` | ESLint (flat config) |
+| `npm test` | Vitest (259 test) |
 
-### Geçiş Avantajları
-- 🔐 **Gelişmiş Güvenlik**: Bearer token authentication
-- ⚡ **Daha İyi Performans**: Optimize edilmiş API yanıtları
-- 🆕 **Yeni Özellikler**: v4'e özel gelişmiş özellikler
+## 📚 Dönüşüm belgeleri
 
-## 📁 Proje Yapısı
+Karar kayıtları ve kanıtlar: [`docs/transformation/`](docs/transformation/) — STATUS, DESIGN_DIRECTION, TMDB_CAPABILITIES, SECURITY_REMEDIATION, RELEASE_VERIFICATION, BASELINE.
 
-```
-src/
-├── api/                    # API konfigürasyonu ve endpoint'ler
-│   ├── endpoints/          # RTK Query endpoint'leri
-│   └── tmdb.api.ts        # Ana API konfigürasyonu
-├── components/             # React bileşenleri
-├── Pages/                  # Sayfa bileşenleri
-├── redux/                  # Redux store
-├── types/                  # TypeScript tip tanımları
-└── utils/                  # Yardımcı fonksiyonlar
-```
+---
 
-## 🎯 Kullanılan API Endpoint'leri
-
-- **Movies**: `/movie/popular`, `/movie/now_playing`, `/movie/upcoming`
-- **TV Shows**: `/tv/popular`, `/tv/airing_today`, `/tv/on_the_air`
-- **Search**: `/search/multi`, `/search/movie`, `/search/tv`
-- **Persons**: `/person/popular`, `/person/{id}`
-
-## 🚀 Deployment
-
-Netlify üzerinde otomatik deployment yapılandırılmıştır:
-
-1. Repository'yi Netlify'a bağlayın
-2. Build command: `npm run build`
-3. Publish directory: `dist`
-4. Environment variables'ları ekleyin
-
-## 📝 Lisans
-
-Bu proje MIT lisansı altında lisanslanmıştır.
-
-## 🤝 Katkıda Bulunma
-
-1. Fork yapın
-2. Feature branch oluşturun (`git checkout -b feature/amazing-feature`)
-3. Commit yapın (`git commit -m 'Add amazing feature'`)
-4. Push yapın (`git push origin feature/amazing-feature`)
-5. Pull Request oluşturun
-
-## 📞 İletişim
-
-- **GitHub**: [@your-username](https://github.com/your-username)
-- **LinkedIn**: [Your LinkedIn](https://linkedin.com/in/your-profile)
-- **Email**: your.email@example.com
+Bu ürün TMDB API'sini kullanır ancak TMDB tarafından onaylanmamış veya sertifikalanmamıştır. Yayın bilgileri JustWatch tarafından sağlanır.
