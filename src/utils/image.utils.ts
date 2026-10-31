@@ -16,6 +16,35 @@ export type ImageSize =
   | 'original';
 
 /**
+ * Responsive srcset for poster/profile images (Cinematic Atlas PosterCard).
+ * w342 → w500 → w780 covers card widths up to ~2x retina at lg size.
+ * @param path - Image file path from TMDB API
+ * @returns srcset string ('' when there is no path)
+ */
+export const posterSrcset = (path: string | null | undefined): string => {
+  if (!path) return '';
+  const sizes: ImageSize[] = ['w342', 'w500', 'w780'];
+  return sizes
+    .map((size) => `${getImageUrl(path, size)} ${size.replace(/\D/g, '')}w`)
+    .join(', ');
+};
+
+/**
+ * Responsive srcset for backdrop/hero images (Cinematic Atlas BackdropHero).
+ * @param path - Image file path from TMDB API
+ * @returns srcset string ('' when there is no path)
+ */
+export const backdropSrcset = (path: string | null | undefined): string => {
+  if (!path) return '';
+  // 'original' has no numeric width; TMDB originals top out at 3840px wide.
+  const widthBySize: Record<string, string> = { w780: '780w', w1280: '1280w', original: '3840w' };
+  const sizes: ImageSize[] = ['w780', 'w1280', 'original'];
+  return sizes
+    .map((size) => `${getImageUrl(path, size)} ${widthBySize[size]}`)
+    .join(', ');
+};
+
+/**
  * Get TMDB image URL with specified size
  * @param path - Image file path from TMDB API
  * @param size - Desired image size

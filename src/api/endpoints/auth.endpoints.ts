@@ -4,9 +4,6 @@
  */
 
 import { tmdbApi } from '../tmdb.api';
-import { TMDB_CONFIG } from '../../utils/constants';
-
-const ACCESS_TOKEN = TMDB_CONFIG.ACCESS_TOKEN;
 
 export interface RequestTokenResponse {
   request_token: string;
@@ -31,7 +28,7 @@ export const authApi = tmdbApi.injectEndpoints({
   endpoints: (builder) => ({
     // Request token oluşturma (Step 1) - v3 API
     createRequestToken: builder.mutation<RequestTokenResponse, { redirect_to?: string }>({
-      query: (data) => ({
+      query: () => ({
         url: `/authentication/token/new`,
         method: 'GET',
       }),

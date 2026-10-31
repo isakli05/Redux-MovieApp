@@ -8,7 +8,6 @@ import type { PopularPersons } from '../../types/popularPersons';
 import type { PersonDetail } from '../../types/personDetail';
 import { TMDB_CONFIG } from '../../utils/constants';
 
-const API_KEY = TMDB_CONFIG.API_KEY;
 const LANGUAGE = TMDB_CONFIG.LANGUAGE;
 
 export const personsApi = tmdbApi.injectEndpoints({
@@ -30,7 +29,7 @@ export const personsApi = tmdbApi.injectEndpoints({
     getPersonDetails: builder.query<PersonDetail, string>({
       query: (personId) => 
         `/person/${personId}?language=${LANGUAGE}&append_to_response=movie_credits,tv_credits,images,external_ids`,
-      providesTags: (result, error, id) => [{ type: 'PersonDetail', id }],
+      providesTags: (result, _error, id) => [{ type: 'PersonDetail', id }],
     }),
 
     // Kişinin film kredileri - v3 API Key ile
