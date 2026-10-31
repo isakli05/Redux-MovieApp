@@ -22,7 +22,7 @@ export function CastRail({ cast, detailPath, limit = 18, className = '' }: CastR
     <div className={className}>
       <ul
         role="list"
-        className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 scrollbar-hide sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8"
+        className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-2 pt-4 scrollbar-hide"
       >
         {cast.slice(0, limit).map((member) => (
           <li key={member.id} className="w-32 shrink-0 snap-start sm:w-36">

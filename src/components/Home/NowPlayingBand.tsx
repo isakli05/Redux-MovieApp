@@ -120,8 +120,8 @@ export function NowPlayingBand({ className = '' }: { className?: string }) {
         <ul
           role="list"
           className={
-            '-mx-4 flex snap-x gap-4 overflow-x-auto px-4 pb-2 scrollbar-hide sm:-mx-6 sm:px-6 ' +
-            'lg:col-span-2 lg:mx-0 lg:grid lg:grid-cols-4 lg:gap-4 lg:overflow-visible lg:px-0'
+            'flex snap-x gap-4 overflow-x-auto pb-2 pt-4 scrollbar-hide ' +
+            'lg:col-span-2 lg:grid lg:grid-cols-4 lg:gap-4 lg:overflow-visible lg:pt-0'
           }
         >
           {posters.map((item) => (

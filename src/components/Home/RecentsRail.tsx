@@ -4,7 +4,7 @@ import type { RecentEntry } from '@utils/recents'
 import { Button, PosterCard } from '@components/ui'
 
 const RAIL_LIST_CLASS =
-  '-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 scrollbar-hide sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8'
+  'flex snap-x snap-mandatory gap-4 overflow-x-auto pb-2 pt-4 scrollbar-hide'
 
 /**
  * "Son Baktıklarınız" (spec §6, fixes T): gerçek localStorage kayıtları.
