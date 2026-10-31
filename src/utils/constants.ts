@@ -11,7 +11,6 @@ const BASE_URL = isProduction
 
 export const TMDB_CONFIG = {
   API_KEY: import.meta.env.VITE_TMDB_API_KEY,
-  ACCESS_TOKEN: import.meta.env.VITE_TMDB_ACCESS_TOKEN, // v4 Bearer token
   BASE_URL,
   IMAGE_BASE_URL: import.meta.env.VITE_TMDB_IMAGE_BASE_URL || 'https://image.tmdb.org/t/p',
   LANGUAGE: import.meta.env.VITE_TMDB_LANGUAGE || 'tr-TR',

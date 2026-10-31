@@ -1,129 +1,164 @@
-import { Link } from 'react-router-dom';
-import { 
-  ArrowLeftIcon, 
-  ArrowRightIcon, 
-  StarIcon, 
-  FilmIcon,
-  CalendarIcon 
-} from '@heroicons/react/24/solid';
-import type { TvSeasons } from '../../types/tvSeasons';
-import type { TvDetails } from '../../types/tvsDetails';
-import { getPosterUrl, formatDate } from '../../utils';
+import { Link } from 'react-router-dom'
+import { ArrowLeftIcon, ArrowRightIcon, PlayIcon, CalendarDaysIcon, FilmIcon } from '@heroicons/react/24/solid'
+import type { TvSeasons } from '../../types/tvSeasons'
+import type { TvDetails } from '../../types/tvsDetails'
+import { getImageUrl, posterSrcset, backdropSrcset, getBackdropUrl, formatDate } from '../../utils'
+import { RatingBadge, Button } from '../ui'
 
 interface EnhancedSeasonHeaderProps {
-  seasonDetail: TvSeasons;
-  tvDetail: TvDetails;
-  tvId: string;
-  seasonNumber: number;
+  seasonDetail: TvSeasons
+  tvDetail: TvDetails
+  tvId: string
+  seasonNumber: number
+  /** Fragman düğmesi: tıklama ebeveynde tembel video isteğini tetikler. */
+  onTrailerClick?: () => void
+  /** Fragman verisi yüklenirken düğme spinner'ı. */
+  trailerLoading?: boolean
+  /** İstek tamamlandı ve fragman yoksa düğme gizlenir/devre dışı kalır. */
+  trailerUnavailable?: boolean
 }
 
-function EnhancedSeasonHeader({ 
-  seasonDetail, 
-  tvDetail, 
-  tvId, 
-  seasonNumber 
+function EnhancedSeasonHeader({
+  seasonDetail,
+  tvDetail,
+  tvId,
+  seasonNumber,
+  onTrailerClick,
+  trailerLoading = false,
+  trailerUnavailable = false,
 }: EnhancedSeasonHeaderProps) {
-  const canGoPrevious = seasonNumber > 1;
-  const canGoNext = seasonNumber < tvDetail.number_of_seasons;
+  const canGoPrevious = seasonNumber > 1
+  const canGoNext = seasonNumber < tvDetail.number_of_seasons
 
-  // Calculate average episode rating
-  const avgRating = seasonDetail.episodes?.length > 0
-    ? seasonDetail.episodes.reduce((sum, ep) => sum + (ep.vote_average || 0), 0) / seasonDetail.episodes.length
-    : 0;
+  // Yalnızca yayınlanmış bölümlerin puanları ortalama alınır (spoiler-safe)
+  const airedEpisodes = (seasonDetail.episodes ?? []).filter(
+    (ep) => ep.air_date && new Date(ep.air_date).getTime() <= Date.now(),
+  )
+  const ratingPool = airedEpisodes.filter((ep) => ep.vote_average > 0)
+  const avgRating =
+    ratingPool.length > 0
+      ? ratingPool.reduce((sum, ep) => sum + (ep.vote_average || 0), 0) / ratingPool.length
+      : 0
+
+  const showTrailer = Boolean(onTrailerClick) && !trailerUnavailable
 
   return (
-    <div className="relative overflow-hidden bg-gradient-to-b from-slate-800 to-slate-900 border-b border-slate-700/50">
-      {/* Decorative blur circles */}
-      <div className="absolute top-0 -left-4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl" />
-      <div className="absolute top-0 -right-4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl" />
-      
-      <div className="relative container mx-auto px-4 py-8">
-        {/* Back to Seasons Link */}
-        <Link 
+    <header className="relative overflow-hidden border-b border-line bg-surface-void">
+      {/* Dizi arka planı — boyutlu + srcset (w780/w1280/original) */}
+      {tvDetail.backdrop_path && (
+        <>
+          <img
+            src={getBackdropUrl(tvDetail.backdrop_path, 'LARGE')}
+            srcSet={backdropSrcset(tvDetail.backdrop_path)}
+            sizes="100vw"
+            alt=""
+            loading="eager"
+            fetchPriority="high"
+            decoding="async"
+            className="absolute inset-0 h-full w-full object-cover object-center opacity-40"
+          />
+          <div
+            className="absolute inset-0 bg-gradient-to-t from-surface-void via-surface-void/80 to-surface-void/40"
+            aria-hidden="true"
+          />
+        </>
+      )}
+
+      <div className="relative container mx-auto px-4 py-8 md:py-12">
+        {/* Sezon listesine dön */}
+        <Link
           to={`/tv/${tvId}/seasons`}
-          className="inline-flex items-center gap-2 text-slate-300 hover:text-cyan-400 
-                     transition-colors mb-6 group"
+          className="group mb-6 inline-flex items-center gap-2 text-sm font-medium text-secondary transition-colors duration-150 ease-cine hover:text-accent"
         >
-          <ArrowLeftIcon className="h-4 w-4 group-hover:-translate-x-1 transition-transform" />
-          <span className="font-medium">Sezon Listesine Dön</span>
+          <ArrowLeftIcon
+            className="h-4 w-4 transition-transform duration-250 ease-cine group-hover:-translate-x-1 motion-reduce:transition-none"
+            aria-hidden="true"
+          />
+          Sezon Listesine Dön
         </Link>
 
-        <div className="flex flex-col lg:flex-row gap-8">
-          {/* Season Poster */}
-          <div className="flex-shrink-0">
+        <div className="flex flex-col gap-8 lg:flex-row">
+          {/* Sezon posteri */}
+          <div className="mx-auto shrink-0 self-start lg:mx-0">
             <img
-              src={getPosterUrl(seasonDetail.poster_path, 'LARGE')}
+              src={getImageUrl(seasonDetail.poster_path || tvDetail.poster_path, 'w500')}
+              srcSet={posterSrcset(seasonDetail.poster_path || tvDetail.poster_path)}
+              sizes="(min-width: 1024px) 288px, 192px"
               alt={seasonDetail.name}
-              className="w-48 md:w-64 lg:w-72 rounded-xl shadow-2xl mx-auto lg:mx-0"
-              loading="lazy"
+              className="w-48 rounded-xl border border-line object-cover md:w-64 lg:w-72"
+              loading="eager"
+              decoding="async"
             />
           </div>
 
-          {/* Season Info */}
+          {/* Sezon bilgisi */}
           <div className="flex-1 space-y-6">
-            {/* Title */}
             <div>
-              <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-2">
+              <p className="mb-1 text-xs font-medium uppercase tracking-[0.08em] text-accent">
+                {tvDetail.name}
+              </p>
+              <h1 className="font-display text-3xl font-semibold tracking-tight text-primary md:text-4xl lg:text-5xl">
                 {seasonDetail.name}
               </h1>
-              <div className="flex flex-wrap items-center gap-4 text-slate-300">
-                {seasonDetail.air_date && (
-                  <div className="flex items-center gap-2">
-                    <CalendarIcon className="h-5 w-5 text-slate-400" />
-                    <span>{formatDate(seasonDetail.air_date, { year: 'numeric' })}</span>
-                  </div>
-                )}
-                <div className="flex items-center gap-2">
-                  <FilmIcon className="h-5 w-5 text-slate-400" />
-                  <span>{seasonDetail.episodes?.length || 0} Bölüm</span>
-                </div>
+
+              {/* Meta satırı */}
+              <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-3 text-sm text-secondary">
                 {avgRating > 0 && (
-                  <div className="flex items-center gap-2">
-                    <StarIcon className="h-5 w-5 text-yellow-400" />
-                    <span className="font-semibold">{avgRating.toFixed(1)}</span>
-                  </div>
+                  <span className="flex items-center gap-2">
+                    <RatingBadge score={avgRating} size="md" />
+                    <span>sezon ortalaması</span>
+                  </span>
                 )}
+
+                {seasonDetail.air_date && (
+                  <span className="flex items-center gap-1.5">
+                    <CalendarDaysIcon className="h-4 w-4 text-muted" aria-hidden="true" />
+                    <span className="tabular-nums">
+                      {formatDate(seasonDetail.air_date, { year: 'numeric', month: 'long', day: 'numeric' })}
+                    </span>
+                  </span>
+                )}
+
+                <span className="flex items-center gap-1.5">
+                  <FilmIcon className="h-4 w-4 text-muted" aria-hidden="true" />
+                  <span className="tabular-nums">{seasonDetail.episodes?.length || 0} Bölüm</span>
+                </span>
               </div>
             </div>
 
-            {/* Overview */}
+            {/* Özet */}
             {seasonDetail.overview && (
-              <p className="text-slate-300 leading-relaxed text-lg max-w-3xl">
-                {seasonDetail.overview}
-              </p>
+              <p className="max-w-3xl leading-relaxed text-secondary">{seasonDetail.overview}</p>
             )}
 
-            {/* Season Navigation */}
-            <div className="flex gap-4 pt-4">
-              {canGoPrevious && (
-                <Link
-                  to={`/tv/${tvId}/season/${seasonNumber - 1}`}
-                  className="flex items-center gap-2 px-6 py-3 bg-slate-700/50 hover:bg-slate-700 
-                             border border-slate-600/50 hover:border-slate-500 rounded-lg 
-                             text-white font-semibold transition-all duration-200"
-                >
-                  <ArrowLeftIcon className="h-5 w-5" />
-                  <span>Sezon {seasonNumber - 1}</span>
-                </Link>
+            {/* Aksiyonlar */}
+            <div className="flex flex-wrap items-center gap-3 pt-2">
+              {showTrailer && (
+                <Button onClick={onTrailerClick} loading={trailerLoading}>
+                  <PlayIcon className="h-4 w-4" aria-hidden="true" />
+                  Fragman İzle
+                </Button>
               )}
-              
+
+              {canGoPrevious && (
+                <Button to={`/tv/${tvId}/season/${seasonNumber - 1}`} variant="outline">
+                  <ArrowLeftIcon className="h-4 w-4" aria-hidden="true" />
+                  {seasonNumber - 1}. Sezon
+                </Button>
+              )}
+
               {canGoNext && (
-                <Link
-                  to={`/tv/${tvId}/season/${seasonNumber + 1}`}
-                  className="flex items-center gap-2 px-6 py-3 bg-slate-700/50 hover:bg-slate-700 
-                             border border-slate-600/50 hover:border-slate-500 rounded-lg 
-                             text-white font-semibold transition-all duration-200"
-                >
-                  <span>Sezon {seasonNumber + 1}</span>
-                  <ArrowRightIcon className="h-5 w-5" />
-                </Link>
+                <Button to={`/tv/${tvId}/season/${seasonNumber + 1}`} variant="outline">
+                  {seasonNumber + 1}. Sezon
+                  <ArrowRightIcon className="h-4 w-4" aria-hidden="true" />
+                </Button>
               )}
             </div>
           </div>
         </div>
       </div>
-    </div>
-  );
+    </header>
+  )
 }
 
-export default EnhancedSeasonHeader;
+export default EnhancedSeasonHeader

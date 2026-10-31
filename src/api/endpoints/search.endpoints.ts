@@ -7,11 +7,9 @@
 import { tmdbApi } from '../tmdb.api';
 import type { Movies } from '../../types/Movies';
 import type { Tvs } from '../../types/tvs';
-import type { PopularPersons } from '../../types/popularPersons';
-import type { SearchResults, MultiSearchResults } from '../../types/search';
+import type { MultiSearchResults } from '../../types/search';
 import { TMDB_CONFIG } from '../../utils/constants';
 
-const API_KEY = TMDB_CONFIG.API_KEY;
 const LANGUAGE = TMDB_CONFIG.LANGUAGE;
 
 export const searchApi = tmdbApi.injectEndpoints({

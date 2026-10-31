@@ -7,18 +7,40 @@
   NODE_VERSION = "20.11.0"
   NPM_VERSION = "10.5.0"
 
+# BFF functions (Netlify Functions v2, TypeScript) — see netlify/functions/README.md
+[functions]
+  directory = "netlify/functions"
+
+# API rewrites to the BFF — MUST precede the SPA catch-all below so that
+# /api/* reaches the functions instead of index.html.
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+
 # Redirect rules for SPA
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
 
-# Headers for security and performance
+# Local dev: `netlify dev` runs Vite + Functions together and exposes .env
+# vars (TMDB_API_KEY) to function code via process.env.
+[dev]
+  command = "npm run dev"
+  targetPort = 5173
+  framework = "#custom"
+  functions = "netlify/functions"
+  autoLaunch = false
+
+# Security + performance headers (docs/transformation/SECURITY_REMEDIATION.md)
 [[headers]]
   for = "/*"
   [headers.values]
+    Content-Security-Policy = "default-src 'self'; img-src 'self' https://image.tmdb.org data:; connect-src 'self' https://api.themoviedb.org; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; frame-src https://www.youtube.com https://www.youtube-nocookie.com; media-src https://video.tmdb.org; base-uri 'self'; form-action 'self'"
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=(), payment=()"
     X-Frame-Options = "DENY"
-    X-XSS-Protection = "1; mode=block"
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
 
@@ -36,4 +58,3 @@
   for = "/*.css"
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
-

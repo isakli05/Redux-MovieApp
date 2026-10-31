@@ -1,17 +1,21 @@
 /**
- * Lists Page
- * Kullanıcı listeleri sayfası - v4 yeni özellik
+ * Lists Page (/lists) — kullanıcının listeleri.
+ * Layout (App.tsx) pt-16 + surface-void zeminini sağlar; bu sayfa içerik +
+ * SEO ile sınırlıdır. Gerçek etkileşim UserLists bileşenindedir.
  */
 
-import React from 'react';
 import { UserLists } from '../components/Lists/UserLists';
+import { useSEO } from '../hooks/useSEO';
 
-const Lists: React.FC = () => {
+const Lists = () => {
+  useSEO({
+    title: 'Listelerim',
+    description: 'TMDB hesabınızla oluşturduğunuz film listelerini görüntüleyin ve yönetin.',
+  });
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-      <div className="pt-16">
-        <UserLists />
-      </div>
+    <div className="mx-auto w-full max-w-[1440px] px-4 py-10 sm:px-6 md:py-14 lg:px-8">
+      <UserLists />
     </div>
   );
 };

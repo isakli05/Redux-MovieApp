@@ -17,6 +17,9 @@ interface ImageGalleryToolbarProps {
   totalCount: number;
 }
 
+const selectClasses =
+  'rounded-lg border border-line-strong bg-surface-overlay px-3 py-1.5 text-sm text-primary transition-colors duration-150 ease-cine hover:border-accent';
+
 const ImageGalleryToolbar = memo<ImageGalleryToolbarProps>(({
   sortBy,
   onSortChange,
@@ -27,19 +30,19 @@ const ImageGalleryToolbar = memo<ImageGalleryToolbarProps>(({
   totalCount,
 }) => {
   return (
-    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 bg-slate-800/30 backdrop-blur-lg border border-slate-700/50 rounded-xl">
+    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 rounded-xl border border-line bg-surface-raised p-4">
       {/* Left side - Filters and Sort */}
       <div className="flex flex-wrap items-center gap-3">
         {/* Sort Dropdown */}
         <div className="flex items-center gap-2">
-          <label htmlFor="sort-select" className="text-sm text-slate-400 font-medium">
+          <label htmlFor="sort-select" className="text-sm font-medium text-secondary">
             Sırala:
           </label>
           <select
             id="sort-select"
             value={sortBy}
             onChange={(e) => onSortChange(e.target.value as SortOption)}
-            className="px-3 py-1.5 bg-slate-700/50 border border-slate-600/50 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+            className={selectClasses}
           >
             <option value="vote_average">En Yüksek Oy</option>
             <option value="vote_count">En Çok Oylanan</option>
@@ -50,14 +53,14 @@ const ImageGalleryToolbar = memo<ImageGalleryToolbarProps>(({
 
         {/* Language Filter */}
         <div className="flex items-center gap-2">
-          <label htmlFor="language-select" className="text-sm text-slate-400 font-medium">
+          <label htmlFor="language-select" className="text-sm font-medium text-secondary">
             Dil:
           </label>
           <select
             id="language-select"
             value={filterLanguage}
             onChange={(e) => onFilterChange(e.target.value as FilterLanguage)}
-            className="px-3 py-1.5 bg-slate-700/50 border border-slate-600/50 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+            className={selectClasses}
           >
             <option value="all">Tümü</option>
             <option value="en">English</option>
@@ -67,38 +70,42 @@ const ImageGalleryToolbar = memo<ImageGalleryToolbarProps>(({
         </div>
 
         {/* Count */}
-        <div className="text-sm text-slate-400">
-          <span className="font-semibold text-white">{totalCount}</span> görsel
+        <div className="text-sm text-secondary">
+          <span className="font-semibold text-primary">{totalCount}</span> görsel
         </div>
       </div>
 
       {/* Right side - View Mode Toggle */}
       <div className="flex items-center gap-2">
-        <span className="text-sm text-slate-400 font-medium">Görünüm:</span>
-        <div className="flex items-center gap-1 p-1 bg-slate-700/50 rounded-lg">
+        <span className="text-sm font-medium text-secondary">Görünüm:</span>
+        <div className="flex items-center gap-1 rounded-lg bg-surface-overlay p-1">
           <button
+            type="button"
             onClick={() => onViewModeChange('grid')}
-            className={`p-2 rounded transition-colors ${
+            className={`rounded p-2 transition-colors duration-150 ease-cine ${
               viewMode === 'grid'
-                ? 'bg-cyan-500 text-white'
-                : 'text-slate-400 hover:text-white hover:bg-slate-600/50'
+                ? 'bg-accent text-accent-ink'
+                : 'text-secondary hover:bg-surface-raised hover:text-primary'
             }`}
-            aria-label="Grid View"
-            title="Grid View"
+            aria-label="Izgara Görünüm"
+            aria-pressed={viewMode === 'grid'}
+            title="Izgara Görünüm"
           >
-            <Squares2X2Icon className="h-4 w-4" />
+            <Squares2X2Icon className="h-4 w-4" aria-hidden="true" />
           </button>
           <button
+            type="button"
             onClick={() => onViewModeChange('masonry')}
-            className={`p-2 rounded transition-colors ${
+            className={`rounded p-2 transition-colors duration-150 ease-cine ${
               viewMode === 'masonry'
-                ? 'bg-cyan-500 text-white'
-                : 'text-slate-400 hover:text-white hover:bg-slate-600/50'
+                ? 'bg-accent text-accent-ink'
+                : 'text-secondary hover:bg-surface-raised hover:text-primary'
             }`}
-            aria-label="Masonry View"
-            title="Masonry View"
+            aria-label="Mozaik Görünüm"
+            aria-pressed={viewMode === 'masonry'}
+            title="Mozaik Görünüm"
           >
-            <ViewColumnsIcon className="h-4 w-4" />
+            <ViewColumnsIcon className="h-4 w-4" aria-hidden="true" />
           </button>
         </div>
       </div>

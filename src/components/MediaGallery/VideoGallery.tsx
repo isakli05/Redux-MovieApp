@@ -34,7 +34,7 @@ const VideoGallery = memo<VideoGalleryProps>(({ videos }) => {
   if (sortedVideos.length === 0) {
     return (
       <div className="text-center py-12">
-        <p className="text-slate-400">Video bulunamadı.</p>
+        <p className="text-secondary">Video bulunamadı.</p>
       </div>
     );
   }

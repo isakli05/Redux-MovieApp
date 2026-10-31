@@ -2,70 +2,152 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Modern Custom Scrollbar - Global */
+/*
+ * Cinematic Atlas — dark-first cinematic editorial system
+ * Spec: docs/transformation/DESIGN_DIRECTION.md (§1 tokens, §3 surfaces, §4 motion)
+ * Tailwind references these variables from tailwind.config.cjs.
+ */
+:root {
+  --color-surface-void: #0a0a0f;
+  --color-surface-base: #101018;
+  --color-surface-raised: #16161f;
+  --color-surface-overlay: #1c1c28;
+  --color-surface-glass: rgba(16, 16, 24, 0.72);
+
+  --color-text-primary: #f5f3ee; /* warm off-white — NEVER #fff */
+  --color-text-secondary: #a8a59c;
+  --color-text-muted: #8a877f;
+
+  --color-accent: #e8b54d;
+  --color-accent-hover: #f5c866;
+  --color-accent-ink: #1a1407;
+
+  --color-success: #4ade80;
+  --color-success-text: #6ee7a0; /* desaturated variant for text on dark */
+  --color-danger: #f87171;
+
+  --color-line: rgba(245, 243, 238, 0.08);
+  --color-line-strong: rgba(245, 243, 238, 0.16);
+
+  --ease-cine: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
 @layer base {
-  /* Firefox */
-  * {
-    scrollbar-width: thin;
-    scrollbar-color: rgba(6, 182, 212, 0.5) rgba(15, 23, 42, 0.3);
+  html {
+    color-scheme: dark;
   }
 
-  /* Webkit (Chrome, Safari, Edge) */
+  body {
+    @apply bg-surface-void font-sans text-primary antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background-color: var(--color-accent);
+    color: var(--color-accent-ink);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  /* Thin, dark scrollbars (was cyan/blue — spec §1 bans those defaults) */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-line-strong) transparent;
+  }
+
   *::-webkit-scrollbar {
     width: 8px;
     height: 8px;
   }
 
   *::-webkit-scrollbar-track {
-    background: rgba(15, 23, 42, 0.3);
-    border-radius: 10px;
+    background: transparent;
   }
 
   *::-webkit-scrollbar-thumb {
-    background: linear-gradient(180deg, rgba(6, 182, 212, 0.6), rgba(59, 130, 246, 0.6));
-    border-radius: 10px;
-    border: 2px solid rgba(15, 23, 42, 0.3);
-    transition: all 0.3s ease;
+    background: var(--color-line-strong);
+    border-radius: 999px;
   }
 
   *::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(180deg, rgba(6, 182, 212, 0.9), rgba(59, 130, 246, 0.9));
-    border-color: rgba(6, 182, 212, 0.3);
+    background: rgba(232, 181, 77, 0.55);
   }
 
   *::-webkit-scrollbar-thumb:active {
-    background: linear-gradient(180deg, rgb(6, 182, 212), rgb(59, 130, 246));
+    background: var(--color-accent);
   }
 
-  /* Scrollbar Corner */
   *::-webkit-scrollbar-corner {
-    background: rgba(15, 23, 42, 0.3);
-  }
-
-  /* Smooth Scrolling */
-  html {
-    scroll-behavior: smooth;
-  }
-
-  /* Body Scrollbar - Slightly Wider */
-  body::-webkit-scrollbar {
-    width: 12px;
-  }
-
-  body::-webkit-scrollbar-thumb {
-    background: linear-gradient(180deg, rgba(6, 182, 212, 0.7), rgba(59, 130, 246, 0.7));
+    background: transparent;
   }
 }
 
-/* Custom Scrollbar Variants */
+/* Reduced-motion kill-switch (spec §4): all durations collapse to ~0. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 @layer utilities {
-  /* Thin Scrollbar */
+  /* Typography helpers */
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  /* Scrim gradients over imagery (spec §1 `scrim`) */
+  .scrim-bottom {
+    background-image: linear-gradient(
+      to top,
+      rgba(10, 10, 15, 0.98) 0%,
+      rgba(10, 10, 15, 0.6) 38%,
+      rgba(10, 10, 15, 0) 78%
+    );
+  }
+
+  .scrim-left {
+    background-image: linear-gradient(
+      to right,
+      rgba(10, 10, 15, 0.98) 0%,
+      rgba(10, 10, 15, 0.65) 38%,
+      rgba(10, 10, 15, 0) 78%
+    );
+  }
+
+  /* Glass bars — ONLY navbar (scrolled) and media/lightbox controls (spec §3) */
+  .glass-bar {
+    background-color: var(--color-surface-glass);
+    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(16px);
+  }
+
+  /* Skeleton shimmer base; pair with motion-safe:animate-shimmer (1.2s).
+     Under prefers-reduced-motion the global kill-switch freezes it (static). */
+  .shimmer {
+    background-color: var(--color-surface-raised);
+    background-image: linear-gradient(
+      100deg,
+      var(--color-surface-raised) 30%,
+      var(--color-surface-overlay) 50%,
+      var(--color-surface-raised) 70%
+    );
+    background-size: 200% 100%;
+  }
+
+  /* Legacy scroll utilities kept for existing components (restyled dark) */
   .scrollbar-thin::-webkit-scrollbar {
     width: 6px;
     height: 6px;
   }
 
-  /* Hide Scrollbar */
   .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;
@@ -75,148 +157,21 @@
     display: none;
   }
 
-  /* Orange Scrollbar for Trending */
-  .scrollbar-orange::-webkit-scrollbar-thumb {
-    background: linear-gradient(180deg, rgba(249, 115, 22, 0.6), rgba(239, 68, 68, 0.6));
-  }
-
-  .scrollbar-orange::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(180deg, rgba(249, 115, 22, 0.9), rgba(239, 68, 68, 0.9));
-  }
-
-  /* Green Scrollbar for Free */
-  .scrollbar-green::-webkit-scrollbar-thumb {
-    background: linear-gradient(180deg, rgba(34, 197, 94, 0.6), rgba(16, 185, 129, 0.6));
-  }
-
-  .scrollbar-green::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(180deg, rgba(34, 197, 94, 0.9), rgba(16, 185, 129, 0.9));
-  }
-
-  /* Custom Scrollbar for Search Results */
   .custom-scrollbar::-webkit-scrollbar {
     width: 8px;
   }
 
   .custom-scrollbar::-webkit-scrollbar-track {
-    background: rgba(15, 23, 42, 0.5);
+    background: transparent;
     border-radius: 10px;
   }
 
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: linear-gradient(180deg, rgba(6, 182, 212, 0.7), rgba(59, 130, 246, 0.7));
+    background: var(--color-line-strong);
     border-radius: 10px;
   }
 
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(180deg, rgba(6, 182, 212, 1), rgba(59, 130, 246, 1));
-  }
-}
-
-/* Loading Animation */
-@keyframes shimmer {
-  0% {
-    background-position: -1000px 0;
-  }
-  100% {
-    background-position: 1000px 0;
-  }
-}
-
-.animate-shimmer {
-  animation: shimmer 2s infinite linear;
-  background: linear-gradient(
-    to right,
-    rgba(30, 41, 59, 0.5) 0%,
-    rgba(51, 65, 85, 0.8) 50%,
-    rgba(30, 41, 59, 0.5) 100%
-  );
-  background-size: 1000px 100%;
-}
-
-/* Person Movies Swiper Styles */
-.person-movies-swiper {
-  padding: 20px 0 50px 0 !important;
-  margin: 0 -30px !important;
-  padding-left: 30px !important;
-  padding-right: 30px !important;
-}
-
-.person-movies-swiper .swiper-button-next,
-.person-movies-swiper .swiper-button-prev {
-  width: 36px;
-  height: 36px;
-  background: rgba(30, 41, 59, 0.95);
-  backdrop-filter: blur(12px);
-  border-radius: 50%;
-  border: 1.5px solid rgba(100, 116, 139, 0.4);
-  transition: all 0.3s ease;
-  z-index: 10;
-}
-
-.person-movies-swiper .swiper-button-next {
-  right: 5px;
-}
-
-.person-movies-swiper .swiper-button-prev {
-  left: 5px;
-}
-
-.person-movies-swiper .swiper-button-next:hover,
-.person-movies-swiper .swiper-button-prev:hover {
-  background: rgba(6, 182, 212, 0.95);
-  border-color: rgba(6, 182, 212, 0.8);
-  transform: scale(1.1);
-  box-shadow: 0 0 15px rgba(6, 182, 212, 0.4);
-}
-
-/* Swiper SVG ikonlarını küçült */
-.person-movies-swiper .swiper-button-next svg,
-.person-movies-swiper .swiper-button-prev svg {
-  width: 8px !important;
-  height: 14px !important;
-}
-
-/* ::after içeriğini kaldır, sadece SVG kullan */
-.person-movies-swiper .swiper-button-next::after,
-.person-movies-swiper .swiper-button-prev::after {
-  display: none !important;
-}
-
-.person-movies-swiper .swiper-button-disabled {
-  opacity: 0.2;
-  cursor: not-allowed;
-}
-
-.person-movies-swiper .swiper-button-disabled:hover {
-  transform: scale(1);
-  background: rgba(30, 41, 59, 0.95);
-  border-color: rgba(100, 116, 139, 0.4);
-  box-shadow: none;
-}
-
-.person-movies-swiper .swiper-pagination {
-  bottom: 10px !important;
-}
-
-.person-movies-swiper .swiper-pagination-bullet {
-  width: 8px;
-  height: 8px;
-  background: rgba(148, 163, 184, 0.4);
-  opacity: 1;
-  transition: all 0.3s ease;
-}
-
-.person-movies-swiper .swiper-pagination-bullet-active {
-  background: linear-gradient(90deg, rgba(6, 182, 212, 1), rgba(59, 130, 246, 1));
-  width: 24px;
-  border-radius: 4px;
-}
-
-/* Mobilde navigation butonlarını gizle */
-@media (max-width: 640px) {
-  .person-movies-swiper .swiper-button-next,
-  .person-movies-swiper .swiper-button-prev {
-    display: none;
+    background: rgba(232, 181, 77, 0.55);
   }
 }

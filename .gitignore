@@ -36,3 +36,6 @@ dist-ssr
 *_GUIDE.md
 *_EXPLANATION.md
 SUMMARY.md
+
+# Local Netlify folder
+.netlify

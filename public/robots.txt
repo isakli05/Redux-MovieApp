@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://isa-kaya-movieapp.netlify.app/sitemap.xml

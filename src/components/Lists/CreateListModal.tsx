@@ -1,116 +1,143 @@
 /**
- * Create List Modal Component
- * Kullanıcıların yeni liste oluşturması için modal
+ * CreateListModal — koyu tema, kit uyumlu liste oluşturma diyaloğu.
+ * Mutasyon BFF üzerinden: POST /api/lists (user.api.ts createList).
+ * Başarıda Lists tag'i invalidate edilir; window.location.reload YOK (defect J).
  */
 
-import React, { useState } from 'react';
+import { Fragment, useState } from 'react';
+import { Dialog, DialogPanel, Transition, TransitionChild } from '@headlessui/react';
+import { Button } from '../ui';
 import { useCreateListMutation } from '../../api';
 
-interface CreateListModalProps {
+export interface CreateListModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess?: () => void;
 }
 
-export const CreateListModal: React.FC<CreateListModalProps> = ({
-  isOpen,
-  onClose,
-  onSuccess,
-}) => {
-  const [formData, setFormData] = useState({
-    name: '',
-    description: '',
-    public: false,
-  });
+const INPUT_CLASS =
+  'w-full rounded-md border border-line bg-surface-overlay px-3 py-2 text-sm text-primary placeholder:text-muted focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent';
+
+export const CreateListModal = ({ isOpen, onClose, onSuccess }: CreateListModalProps) => {
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const [createList, { isLoading }] = useCreateListMutation();
 
+  const reset = () => {
+    setName('');
+    setDescription('');
+    setErrorMessage(null);
+  };
+
+  const handleClose = () => {
+    if (isLoading) return;
+    reset();
+    onClose();
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+    const trimmed = name.trim();
+    if (!trimmed || isLoading) return;
+    setErrorMessage(null);
     try {
-      await createList({
-        name: formData.name,
-        description: formData.description,
-        public: formData.public,
-      }).unwrap();
-      
-      setFormData({ name: '', description: '', public: false });
+      await createList({ name: trimmed, description: description.trim() }).unwrap();
+      reset();
       onClose();
       onSuccess?.();
-    } catch (error) {
-      console.error('Liste oluşturma hatası:', error);
+    } catch {
+      setErrorMessage('Liste oluşturulamadı. Lütfen tekrar deneyin.');
     }
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
-        <h2 className="text-2xl font-bold mb-4 text-gray-800">
-          Yeni Liste Oluştur
-        </h2>
-        
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Liste Adı
-            </label>
-            <input
-              type="text"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Örn: Favori Filmlerim"
-              required
-            />
-          </div>
+    <Transition show={isOpen} as={Fragment}>
+      <Dialog onClose={handleClose} className="relative z-[80]">
+        <TransitionChild
+          as={Fragment}
+          enter="transition ease-cine duration-150"
+          enterFrom="transform opacity-0"
+          enterTo="transform opacity-100"
+          leave="transition ease-cine duration-150"
+          leaveFrom="transform opacity-100"
+          leaveTo="transform opacity-0"
+        >
+          <div className="fixed inset-0 bg-surface-void/80 backdrop-blur-sm" aria-hidden="true" />
+        </TransitionChild>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Açıklama
-            </label>
-            <textarea
-              value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Bu liste hakkında kısa bir açıklama..."
-              rows={3}
-            />
-          </div>
+        <div className="fixed inset-0 flex items-center justify-center p-4">
+          <TransitionChild
+            as={Fragment}
+            enter="transition ease-cine duration-150"
+            enterFrom="transform opacity-0 scale-95"
+            enterTo="transform opacity-100 scale-100"
+            leave="transition ease-cine duration-150"
+            leaveFrom="transform opacity-100 scale-100"
+            leaveTo="transform opacity-0 scale-95"
+          >
+            <DialogPanel className="w-full max-w-md rounded-xl border border-line bg-surface-raised p-6 shadow-cine focus:outline-none">
+              <h2 className="font-display text-lg font-semibold text-primary">Yeni Liste Oluştur</h2>
+              <p className="mt-1 text-xs text-muted">
+                TMDB v3 listeleri yalnızca film destekler.
+              </p>
 
-          <div className="flex items-center">
-            <input
-              type="checkbox"
-              id="public"
-              checked={formData.public}
-              onChange={(e) => setFormData({ ...formData, public: e.target.checked })}
-              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-            />
-            <label htmlFor="public" className="ml-2 block text-sm text-gray-700">
-              Herkese açık liste
-            </label>
-          </div>
+              <form onSubmit={handleSubmit} className="mt-5 space-y-4" noValidate>
+                <div>
+                  <label htmlFor="list-name" className="mb-1.5 block text-sm font-medium text-secondary">
+                    Liste Adı
+                  </label>
+                  <input
+                    id="list-name"
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className={INPUT_CLASS}
+                    placeholder="Örn: Favori Filmlerim"
+                    maxLength={200}
+                    autoComplete="off"
+                    required
+                  />
+                </div>
 
-          <div className="flex justify-end space-x-3 pt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-gray-600 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors"
-            >
-              İptal
-            </button>
-            <button
-              type="submit"
-              disabled={isLoading || !formData.name.trim()}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              {isLoading ? 'Oluşturuluyor...' : 'Liste Oluştur'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+                <div>
+                  <label
+                    htmlFor="list-description"
+                    className="mb-1.5 block text-sm font-medium text-secondary"
+                  >
+                    Açıklama
+                  </label>
+                  <textarea
+                    id="list-description"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    className={INPUT_CLASS}
+                    placeholder="Bu liste hakkında kısa bir açıklama…"
+                    rows={3}
+                    maxLength={1000}
+                  />
+                </div>
+
+                {errorMessage && (
+                  <p role="alert" className="text-sm text-danger">
+                    {errorMessage}
+                  </p>
+                )}
+
+                <div className="flex justify-end gap-3 pt-2">
+                  <Button type="button" variant="outline" size="sm" onClick={handleClose} disabled={isLoading}>
+                    Vazgeç
+                  </Button>
+                  <Button type="submit" size="sm" loading={isLoading} disabled={!name.trim()}>
+                    Liste Oluştur
+                  </Button>
+                </div>
+              </form>
+            </DialogPanel>
+          </TransitionChild>
+        </div>
+      </Dialog>
+    </Transition>
   );
 };

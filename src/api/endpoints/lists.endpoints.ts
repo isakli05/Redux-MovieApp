@@ -1,152 +1,80 @@
 /**
- * TMDB API v4 - Lists Endpoints
- * Kullanıcı listeleri ile ilgili tüm API çağrıları
- * v4'ün yeni özelliği
+ * TMDB API v3 - Lists Endpoints (user-surface, BFF rewiring)
+ *
+ * Wave 4 migration (docs/transformation/SECURITY_REMEDIATION.md, decision D1):
+ * every user-surface list call (create/read/update/delete + add/remove item)
+ * now runs against the same-origin BFF (`/api/*`) via `src/api/user.api.ts`.
+ * The v3 session lives in the httpOnly `tmdb_session` cookie and is injected
+ * server-side — this module no longer injects `session_id` into catalog URLs.
+ *
+ * This file remains as the public import surface (`../api` barrel): it
+ * re-exports the user.api types/hooks plus pure request-shape builders that
+ * the URL-shape tests assert against. v3 lists are movie-only (D1 kısıtı).
  */
 
-import { tmdbApi } from '../tmdb.api';
-import { TMDB_CONFIG } from '../../utils/constants';
+export type {
+  AccountListSummary,
+  AccountMediaPage,
+  AccountMediaType,
+  CreateListRequest,
+  ListDetail,
+  ListDetailItem,
+  ListItemMutationArgs,
+  ListMutationResponse,
+  SessionResponse,
+  UserListsPage,
+} from '../user.api';
 
-const ACCESS_TOKEN = TMDB_CONFIG.ACCESS_TOKEN;
-const LANGUAGE = TMDB_CONFIG.LANGUAGE;
+// NOTE: `UserAccount` is intentionally NOT re-exported here — auth.endpoints
+// already exports a different interface with that name and a barrel-level
+// `export *` collision would silently drop both bindings.
 
-// Liste tipleri
-export interface ListItem {
-  media_type: 'movie' | 'tv';
-  media_id: number;
-  comment?: string;
-}
+export {
+  userApi,
+  useAddFavoriteMutation,
+  useAddListItemMutation,
+  useCreateListMutation,
+  useDeleteListMutation,
+  useDeleteRatingMutation,
+  useGetFavoritesQuery,
+  useGetListDetailsQuery,
+  useGetRatedQuery,
+  useGetSessionQuery,
+  useGetUserListsQuery,
+  useGetWatchlistQuery,
+  useRateMediaMutation,
+  useRemoveListItemMutation,
+  useSetWatchlistMutation,
+  useUpdateListMutation,
+} from '../user.api';
 
-export interface List {
-  id: string;
-  name: string;
-  description: string;
-  language: string;
-  public: boolean;
-  item_count: number;
-  created_by: string;
-  items: ListItem[];
-}
+/**
+ * Pure URL/request builders over the BFF surface (exported for tests).
+ * These mirror the `query` fns of the userApi endpoints one-for-one.
+ */
 
-export interface CreateListRequest {
-  name: string;
-  description: string;
-  language?: string;
-  public?: boolean;
-}
+/** GET /api/lists?accountId=&page= — account id zorunlu (fixes D). */
+export const userListsUrl = (arg?: { accountId?: number | string; page?: number } | void): string => {
+  const { accountId, page = 1 } = arg ?? {};
+  if (accountId === undefined) return '/lists?page=1';
+  return `/lists?accountId=${accountId}&page=${page}`;
+};
 
-export interface AddItemsRequest {
-  items: ListItem[];
-}
-
-export const listsApi = tmdbApi.injectEndpoints({
-  endpoints: (builder) => ({
-    // Liste oluşturma
-    createList: builder.mutation<{ list_id: string }, CreateListRequest>({
-      query: (listData) => ({
-        url: '/list',
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: {
-          name: listData.name,
-          description: listData.description,
-          language: listData.language || LANGUAGE,
-          public: listData.public || false,
-        },
-      }),
-      invalidatesTags: [{ type: 'List', id: 'USER-LISTS' }],
-    }),
-
-    // Liste detayları
-    getListDetails: builder.query<List, string>({
-      query: (listId) => `/list/${listId}`,
-      providesTags: (result, error, id) => [{ type: 'List', id }],
-    }),
-
-    // Kullanıcının listeleri
-    getUserLists: builder.query<List[], void>({
-      query: () => '/account/lists',
-      providesTags: [{ type: 'List', id: 'USER-LISTS' }],
-    }),
-
-    // Listeye öğe ekleme
-    addItemsToList: builder.mutation<{ success: boolean }, { listId: string; items: ListItem[] }>({
-      query: ({ listId, items }) => ({
-        url: `/list/${listId}/items`,
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: { items },
-      }),
-      invalidatesTags: (result, error, { listId }) => [
-        { type: 'List', id: listId },
-        { type: 'List', id: 'USER-LISTS' },
-      ],
-    }),
-
-    // Listeden öğe çıkarma
-    removeItemsFromList: builder.mutation<{ success: boolean }, { listId: string; items: ListItem[] }>({
-      query: ({ listId, items }) => ({
-        url: `/list/${listId}/items`,
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: { items },
-      }),
-      invalidatesTags: (result, error, { listId }) => [
-        { type: 'List', id: listId },
-        { type: 'List', id: 'USER-LISTS' },
-      ],
-    }),
-
-    // Liste güncelleme
-    updateList: builder.mutation<{ success: boolean }, { listId: string; name: string; description: string }>({
-      query: ({ listId, name, description }) => ({
-        url: `/list/${listId}`,
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: { name, description },
-      }),
-      invalidatesTags: (result, error, { listId }) => [
-        { type: 'List', id: listId },
-        { type: 'List', id: 'USER-LISTS' },
-      ],
-    }),
-
-    // Liste silme
-    deleteList: builder.mutation<{ success: boolean }, string>({
-      query: (listId) => ({
-        url: `/list/${listId}`,
-        method: 'DELETE',
-      }),
-      invalidatesTags: (result, error, listId) => [
-        { type: 'List', id: listId },
-        { type: 'List', id: 'USER-LISTS' },
-      ],
-    }),
-
-    // Öğe durumu kontrolü
-    checkItemStatus: builder.query<{ item_present: boolean }, { listId: string; mediaId: number; mediaType: 'movie' | 'tv' }>({
-      query: ({ listId, mediaId, mediaType }) => 
-        `/list/${listId}/item_status?media_id=${mediaId}&media_type=${mediaType}`,
-    }),
-  }),
+/** POST /api/lists/:id/items with a JSON {mediaId} body (defect J wiring). */
+export const addListItemRequest = ({ listId, mediaId }: ListItemMutationArgsShim) => ({
+  url: `/lists/${listId}/items`,
+  method: 'POST',
+  body: { mediaId },
 });
 
-// Export hooks
-export const {
-  useCreateListMutation,
-  useGetListDetailsQuery,
-  useGetUserListsQuery,
-  useAddItemsToListMutation,
-  useRemoveItemsFromListMutation,
-  useUpdateListMutation,
-  useDeleteListMutation,
-  useCheckItemStatusQuery,
-} = listsApi;
+/** DELETE /api/lists/:id/items with a JSON {mediaId} body (BFF maps to v3 POST remove_item). */
+export const removeListItemRequest = ({ listId, mediaId }: ListItemMutationArgsShim) => ({
+  url: `/lists/${listId}/items`,
+  method: 'DELETE',
+  body: { mediaId },
+});
+
+interface ListItemMutationArgsShim {
+  listId: number | string;
+  mediaId: number;
+}
