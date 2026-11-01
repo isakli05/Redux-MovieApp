@@ -5,9 +5,9 @@ Baseline evidence (pre-branch, master @ 3affa46): typecheck ✅ · lint ✅ (0 e
 | Feature | PM agent | Branch | Worktree | State | Integrated | Blockers |
 |---|---|---|---|---|---|---|
 | F1 Seans | pm-seans | feature/lmdb-seans | wt/seans | in progress (f757df1 core ranker) | — | — |
-| F2 Cinema DNA | pm-cinema-dna | feature/lmdb-cinema-dna | wt/dna | in progress (3c82598 — impl+tests, final verification) | — | — |
-| F3 Cinema Universe | pm-cinema-universe | feature/lmdb-cinema-universe | wt/universe | not started | — | — |
-| F4 Group Choice | pm-group-choice | feature/lmdb-group-choice | wt/group | not started | — | — |
+| F2 Cinema DNA | pm-cinema-dna | feature/lmdb-cinema-dna | wt/dna | delivered (3c82598) | merged @ 4e1ca56 — independently verified 300/300 | watchlist import consciously excluded (honest-event-kind rule, contracts §D) |
+| F3 Cinema Universe | pm-cinema-universe | feature/lmdb-cinema-universe | wt/universe | delivered (1e005f3) | merged @ e3e207c — independently verified 300/300 | read-only feature (no preference events) by Master decision |
+| F4 Group Choice | pm-group-choice | feature/lmdb-group-choice | wt/group | RESTARTED (replacement agent; prior agent stalled on port-5173 collision, untracked work salvaged) | — | original attempt's uncommitted files under audit |
 | F5 Daily Mystery | pm-daily-mystery | feature/lmdb-daily-mystery | wt/mystery | in progress (8100e6e — impl+tests, final verification) | — | — |
 | F6 TV Tracker | pm-tv-tracker | feature/lmdb-tv-tracker | wt/tvtracker | delivered (5513093) | merged @ 826ec62 — independently verified: 307/307 tests, typecheck/lint clean | none; detail-page mounts deferred to unified integration pass |
 
