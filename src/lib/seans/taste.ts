@@ -92,7 +92,11 @@ export function parseDnaWeightRecord(raw: unknown): Record<number, number> {
   if (!raw || typeof raw !== 'object') return {};
   const weights: Record<number, number> = {};
   for (const [k, v] of Object.entries(raw as Record<string, unknown>)) {
-    const id = Number(k.includes(':') ? k.slice(k.indexOf(':') + 1) : k);
+    // Yalnızca tür anahtarları: düz "35" veya "movie:35"/"tv:18". "person:287"
+    // gibi diğer önekler tür-id uzayına ait değildir.
+    const sep = k.indexOf(':');
+    if (sep !== -1 && !/^(movie|tv):/.test(k)) continue;
+    const id = Number(sep === -1 ? k : k.slice(sep + 1));
     if (Number.isInteger(id) && id > 0 && typeof v === 'number' && Number.isFinite(v)) {
       weights[id] = v;
     }

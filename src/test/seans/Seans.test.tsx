@@ -140,7 +140,8 @@ describe('Seans sayfası', () => {
 
     // Sonuçlar deterministik sıradadır ve gerçek kriterlerle açıklanır.
     expect(await screen.findByRole('heading', { name: 'Perden için adaylar' })).toBeVisible();
-    const first = screen.getByText('Kahkaha Ustası').closest('article') as HTMLElement;
+    // aday kartları, DNA profili gibi opsiyonel asenkron ağırlıklar yüklendikten sonra gelir
+    const first = (await screen.findByText('Kahkaha Ustası')).closest('article') as HTMLElement;
     expect(screen.getAllByRole('listitem').length).toBeGreaterThanOrEqual(3);
     expect(within(first).getByText(/Seçtiğin türlerden/)).toBeVisible();
     expect(within(first).getByText(/Kahkaha garantili.*ruh hâli/i)).toBeVisible();
@@ -157,7 +158,8 @@ describe('Seans sayfası', () => {
     await walkToResults(user);
     await screen.findByText('Kahkaha Ustası');
 
-    const first = screen.getByText('Kahkaha Ustası').closest('article') as HTMLElement;
+    // aday kartları, DNA profili gibi opsiyonel asenkron ağırlıklar yüklendikten sonra gelir
+    const first = (await screen.findByText('Kahkaha Ustası')).closest('article') as HTMLElement;
     await user.click(within(first).getByRole('button', { name: 'Bu değil' }));
 
     // Kart gider, ikinci aday 1 numaraya çıkar, geri alma çubuğu görünür.
@@ -177,7 +179,8 @@ describe('Seans sayfası', () => {
     await walkToResults(user);
     await screen.findByText('Kahkaha Ustası');
 
-    const first = screen.getByText('Kahkaha Ustası').closest('article') as HTMLElement;
+    // aday kartları, DNA profili gibi opsiyonel asenkron ağırlıklar yüklendikten sonra gelir
+    const first = (await screen.findByText('Kahkaha Ustası')).closest('article') as HTMLElement;
     await user.click(within(first).getByRole('button', { name: 'İzledim' }));
 
     expect(screen.queryByText('Kahkaha Ustası')).not.toBeInTheDocument();
@@ -197,7 +200,8 @@ describe('Seans sayfası', () => {
     await walkToResults(user);
     await screen.findByText('Kahkaha Ustası');
 
-    const first = screen.getByText('Kahkaha Ustası').closest('article') as HTMLElement;
+    // aday kartları, DNA profili gibi opsiyonel asenkron ağırlıklar yüklendikten sonra gelir
+    const first = (await screen.findByText('Kahkaha Ustası')).closest('article') as HTMLElement;
     await user.click(within(first).getByRole('button', { name: 'Favorilere ekle' }));
 
     expect(state.addFavorite).toHaveBeenCalledWith({ mediaType: 'movie', mediaId: 1, favorite: true });
@@ -258,7 +262,8 @@ describe('Seans sayfası', () => {
 
     expect(await screen.findByText('Kahkaha Ustası')).toBeVisible();
     // Seed ile ortak tür (Komedi=35) gerçekten eşleşirse sebep olarak yazılır.
-    const first = screen.getByText('Kahkaha Ustası').closest('article') as HTMLElement;
+    // aday kartları, DNA profili gibi opsiyonel asenkron ağırlıklar yüklendikten sonra gelir
+    const first = (await screen.findByText('Kahkaha Ustası')).closest('article') as HTMLElement;
     expect(within(first).getByText(/Başlangıç yapımıyla ortak türler/)).toBeVisible();
   });
 });
