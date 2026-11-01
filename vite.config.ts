@@ -45,7 +45,10 @@ export default defineConfig(({ mode }) => {
     test: {
       environment: 'jsdom',
       globals: true,
-      setupFiles: './src/test/setup.ts'
+      setupFiles: './src/test/setup.ts',
+      // wt/ hosts the six parallel PM worktrees — their in-progress tests
+      // must not leak into this tree's gate (same reason as eslint ignores).
+      exclude: ['**/node_modules/**', '**/dist/**', 'wt/**']
     }
   }
 })
