@@ -24,7 +24,7 @@ export const MAX_GENRES = 4;
 export const MAX_PROVIDERS = 6;
 export const REGIONS: readonly string[] = ['TR', 'US', 'DE', 'GB'];
 
-/** Code alphabet: no I, L, O, 0, 1 (ambiguity) — 29 unguessable chars. */
+/** Code alphabet: no I, L, O, 0, 1 (ambiguity) — 31 unguessable chars. */
 export const CODE_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
 export const CODE_LEN = 6;
 

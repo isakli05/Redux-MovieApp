@@ -7,7 +7,7 @@
  *                room/<code> → RoomDoc, part/<code>/<pid> → ParticipantState
  *                Erişim `@netlify/blobs` getStore ile (üretimde çalışma zamanı
  *                kimlik bilgilerini enjekte eder; `netlify dev` yerelde öykünür).
- * Privacy      : oda kodu tahmin edilemez (29^6), eksik/süresi geçmiş oda
+ * Privacy      : oda kodu tahmin edilemez (31^6), eksik/süresi geçmiş oda
  *                aynı sanitize edilmiş 404 ile döner (enumeration yok);
  *                hostKey yalnız ev sahibi istemciye bir kez verilir.
  */
@@ -138,7 +138,7 @@ export async function viewFor(loaded: LoadedRoom, pid: unknown): Promise<RoomVie
 
 /**
  * Örnek-başı ağ limiti (savunma derinliği): kod denemesi/SPAM join'e perde.
- * Kod zaten 29^6 tahmin edilemez; bu, ucuz ikinci bir katman.
+ * Kod zaten 31^6 tahmin edilemez; bu, ucuz ikinci bir katman.
  */
 const ipHits = new Map<string, number[]>();
 const IP_WINDOW_MS = 60_000;
@@ -178,7 +178,7 @@ async function createRoom(req: Request, context: RoomContext): Promise<Response>
   try {
     const s = await blobsStore();
     const now = Date.now();
-    // Kod çarpışması: kontrol et, gerekirse yeniden dene (29^6 → pratikte nadir).
+    // Kod çarpışması: kontrol et, gerekirse yeniden dene (31^6 → pratikte nadir).
     let code = randomCode();
     for (let i = 0; i < 5 && (await s.get(docKey(code))) !== null; i++) code = randomCode();
 
