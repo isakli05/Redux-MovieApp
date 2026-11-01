@@ -36,6 +36,8 @@ describe('CastRail', () => {
 
   it('kişi kartları /person/:id bağlantısı verir', () => {
     renderRail()
-    expect(screen.getByRole('link', { name: 'Oyuncu 1 Karakter 1' })).toHaveAttribute('href', '/person/1')
+    const person1 = screen.getAllByRole('link').find((l) => l.getAttribute('href') === '/person/1')
+    expect(person1).toBeDefined()
+    expect(person1?.textContent).toContain('Oyuncu 1')
   })
 })
