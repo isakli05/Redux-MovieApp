@@ -45,12 +45,21 @@ Mystery and TV Tracker are appended to one normalized log:
 
 ## D. API surface
 
-- TMDB **v3 only**, and only through the existing Netlify Functions BFF
-  (`netlify/functions/_shared/tmdb.ts`). The browser never calls
-  `api.themoviedb.org` directly (CSP `connect-src` stays `'self'`).
+- TMDB **v3 only**. Two sanctioned patterns, matching the pre-existing app:
+  - **Catalog reads** may use the existing client-side `TMDB_CONFIG` pattern
+    (direct `api.themoviedb.org` GETs with the public read key; already
+    allowed by CSP `connect-src`). Prefer existing `src/api/endpoints/*`.
+  - **Session/account mutations and any request carrying secrets** go through
+    the Netlify Functions BFF (`netlify/functions/_shared/tmdb.ts`) — never
+    the client.
 - New server endpoints: one file per function, Functions v2 in-source
-  `config.path` under `/api/*`, secrets via `process.env` only.
+  `config.path` under `/api/*`, secrets via `process.env` only. Room state
+  (F4) and daily-mystery answer validation (F5) are server-side by contract.
 - The shared `tmdb()` helper owns error shape and rate behavior; reuse it.
+
+Accepted deviation (Master, 2026-11-01): Cinema DNA does NOT import the TMDB
+watchlist — "want to watch" has no honest event kind, and mapping it to
+`seen` would falsely suppress Seans recommendations (§H). Stated in UI copy.
 
 ## E. Persistence
 
