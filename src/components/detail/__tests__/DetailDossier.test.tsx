@@ -23,6 +23,17 @@ vi.mock('@hooks/useRegion', () => ({
 const mediaGalleryMock = vi.fn((_props: { mediaType: string; id: string }) => (
   <div data-testid="media-gallery-mock" />
 ))
+vi.mock('@/hooks/useAuth', () => ({
+  useAuth: () => ({
+    user: null,
+    isLoading: false,
+    isAuthenticated: false,
+    bootstrapped: true,
+    login: vi.fn(),
+    logout: vi.fn(),
+  }),
+}))
+
 vi.mock('@components/MediaGallery/MediaGallery', () => ({
   default: (props: { mediaType: string; id: string }) => mediaGalleryMock(props),
 }))
