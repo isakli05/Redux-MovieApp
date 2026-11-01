@@ -9,7 +9,7 @@ Baseline evidence (pre-branch, master @ 3affa46): typecheck ✅ · lint ✅ (0 e
 | F3 Cinema Universe | pm-cinema-universe | feature/lmdb-cinema-universe | wt/universe | not started | — | — |
 | F4 Group Choice | pm-group-choice | feature/lmdb-group-choice | wt/group | not started | — | — |
 | F5 Daily Mystery | pm-daily-mystery | feature/lmdb-daily-mystery | wt/mystery | not started | — | — |
-| F6 TV Tracker | pm-tv-tracker | feature/lmdb-tv-tracker | wt/tvtracker | not started | — | — |
+| F6 TV Tracker | pm-tv-tracker | feature/lmdb-tv-tracker | wt/tvtracker | delivered (5513093) | merged @ 826ec62 — independently verified: 307/307 tests, typecheck/lint clean | none; detail-page mounts deferred to unified integration pass |
 
 Environment: Claude Code 2.1.281 · model glm-5.3 · spawn depth 2 verified by
 smoke test (PM spawned specialist, specialist answered, chain healthy) ·
