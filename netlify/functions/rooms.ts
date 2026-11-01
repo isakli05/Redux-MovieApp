@@ -5,14 +5,14 @@
  *                GET  /api/rooms?code=&pid=   (poll, ≤5 s istemci aralığı)
  * Storage      : Netlify Blobs store `group-rooms` (SHARED_CONTRACTS §E)
  *                room/<code> → RoomDoc, part/<code>/<pid> → ParticipantState
- *                Erişim Functions v2 `context.blobs` üzerinden — @netlify/blobs
- *                paketi kurulu değil (Master kararı), context API'si hem üretim
- *                hem `netlify dev` yerel öykünmesinde çalışır.
+ *                Erişim `@netlify/blobs` getStore ile (üretimde çalışma zamanı
+ *                kimlik bilgilerini enjekte eder; `netlify dev` yerelde öykünür).
  * Privacy      : oda kodu tahmin edilemez (29^6), eksik/süresi geçmiş oda
  *                aynı sanitize edilmiş 404 ile döner (enumeration yok);
  *                hostKey yalnız ev sahibi istemciye bir kez verilir.
  */
 
+import { getStore, type Store } from '@netlify/blobs';
 import {
   apiError,
   isMutationAuthorized,
@@ -40,61 +40,22 @@ import {
 export const config = { path: '/api/rooms' };
 
 // ---------------------------------------------------------------------------
-// Blobs access (structural types — the SDK types are not installed locally)
+// Blobs access
 
-/** Netlify Blobs store yüzeyi (kurulu sürümün kullandığımız alt kümesi). */
-export interface BlobsStore {
-  get(key: string): Promise<string | null>;
-  set(key: string, value: string): Promise<void>;
-  delete(key: string): Promise<void>;
-  list(options?: { prefix?: string }): Promise<{ blobs: Array<{ key: string }> }>;
-}
+export type RoomContext = FunctionContext;
 
-export type RoomContext = FunctionContext & { blobs?: { getStore(name: string): BlobsStore } };
-
-/**
- * Blobs erişimi — iki yoldan ilki:
- * 1. Functions v2 `context.blobs` (üretim çalışma zamanı doldurur),
- * 2. `@netlify/blobs` paketinden getStore (yerel `netlify dev` öykünmesinin
- *    tek yolu; paket üretimde çalışma zamanı tarafından sağlanır, yerelde
- *    node_modules'te bulunmalıdır — bkz. rapor).
- * İkisi de yoksa tek tip sanitize hata — ayrıntı sızmaz.
- */
-let blobsSdkPromise: Promise<{ getStore(name: string): BlobsStore } | null> | null = null;
-
-function blobsSdk(): Promise<{ getStore(name: string): BlobsStore } | null> {
-  blobsSdkPromise ??= (async () => {
-    try {
-      // string olarak tutulur: tsc çözümlemeye çalışmasın (paket yerelde kurulu değil)
-      const specifier: string = '@netlify/blobs';
-      return (await import(specifier)) as { getStore(name: string): BlobsStore };
-    } catch {
-      return null;
-    }
-  })();
-  return blobsSdkPromise;
-}
-
-export async function blobsStore(context: RoomContext): Promise<BlobsStore> {
-  const contextual = context.blobs?.getStore?.('group-rooms');
-  if (contextual) return contextual;
-  const sdk = await blobsSdk();
-  if (!sdk?.getStore) throw new BlobsUnavailable();
-  return sdk.getStore('group-rooms');
-}
-
-export class BlobsUnavailable extends Error {
-  constructor() {
-    super('blobs_unavailable');
-  }
+/** Oda deposu — kimlik bilgilerini Netlify çalışma zamanı sağlar. */
+export async function blobsStore(): Promise<Store> {
+  return getStore('group-rooms');
 }
 
 /** Blobs katmanı hatalarını istemciye sanitize ederek ilet (ayrıntı yalnız sunucu günlüğünde). */
 export function storageError(e: unknown): Response {
-  if (e instanceof BlobsUnavailable) {
+  console.error('[rooms] blobs failure:', e instanceof Error ? `${e.name}: ${e.message}` : e);
+  // Yapılandırma eksikliği (ör. blobs site için kapalı) dağıtım hatasıdır → 503.
+  if (e instanceof Error && /credential|configured/i.test(e.message)) {
     return apiError(503, 'storage_unavailable', 'Oda deposu şu an hazır değil; biraz sonra tekrar dene.');
   }
-  console.error('[rooms] blobs failure:', e instanceof Error ? `${e.name}: ${e.message}` : e);
   return apiError(500, 'storage_error', 'Oda deposuna erişilemedi; biraz sonra tekrar dene.');
 }
 
@@ -102,7 +63,7 @@ export function storageError(e: unknown): Response {
 // Shared server helpers (imported by the other rooms-*.ts functions)
 
 async function purgeRoom(context: RoomContext, code: string): Promise<void> {
-  const s = await blobsStore(context);
+  const s = await blobsStore();
   await s.delete(docKey(code));
   const listed = await s.list({ prefix: partPrefix(code) });
   for (const b of listed.blobs) await s.delete(b.key);
@@ -119,8 +80,9 @@ export interface LoadedRoom {
  */
 export async function loadRoom(context: RoomContext, code: unknown): Promise<LoadedRoom | null> {
   if (!isValidCodeFormat(code)) return null;
-  const s = await blobsStore(context);
-  const raw = await s.get(docKey(code));
+  const s = await blobsStore();
+  // type:'text' — options'suz çağrı SDK tipinde ArrayBuffer aşırı yüküne düşer.
+  const raw = await s.get(docKey(code), { type: 'text' });
   if (!raw) return null;
   let room: RoomDoc;
   try {
@@ -136,7 +98,7 @@ export async function loadRoom(context: RoomContext, code: unknown): Promise<Loa
   const listed = await s.list({ prefix: partPrefix(code) });
   const participants: ParticipantState[] = [];
   for (const b of listed.blobs) {
-    const v = await s.get(b.key);
+    const v = await s.get(b.key, { type: 'text' });
     if (!v) continue;
     try {
       participants.push(JSON.parse(v) as ParticipantState);
@@ -148,12 +110,12 @@ export async function loadRoom(context: RoomContext, code: unknown): Promise<Loa
 }
 
 export async function saveRoom(context: RoomContext, room: RoomDoc): Promise<void> {
-  const s = await blobsStore(context);
+  const s = await blobsStore();
   await s.set(docKey(room.code), JSON.stringify(room));
 }
 
 export async function saveParticipant(context: RoomContext, code: string, p: ParticipantState): Promise<void> {
-  const s = await blobsStore(context);
+  const s = await blobsStore();
   await s.set(partKey(code, p.pid), JSON.stringify(p));
 }
 
@@ -214,7 +176,7 @@ async function createRoom(req: Request, context: RoomContext): Promise<Response>
   if (constraints === null) return apiError(400, 'invalid_constraints', 'Kısıtlar geçersiz.');
 
   try {
-    const s = await blobsStore(context);
+    const s = await blobsStore();
     const now = Date.now();
     // Kod çarpışması: kontrol et, gerekirse yeniden dene (29^6 → pratikte nadir).
     let code = randomCode();
