@@ -9,7 +9,7 @@ import {
   Transition,
   TransitionChild,
 } from '@headlessui/react';
-import { Bars3Icon, MagnifyingGlassIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { Bars3Icon, ChevronDownIcon, MagnifyingGlassIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { Link, NavLink } from 'react-router-dom';
 import SearchBar from './Search/SearchBar';
 import { useAuth } from '../hooks/useAuth';
@@ -28,6 +28,17 @@ const NAV_LINKS = [
   { to: '/movie', label: 'Filmler', end: false },
   { to: '/tv', label: 'Diziler', end: false },
   { to: '/person', label: 'İnsanlar', end: false },
+];
+
+// Interactive experiences (docs/interactive-experiences/) — grouped under one
+// menu so the primary discovery nav stays intact (SHARED_CONTRACTS §F).
+const EXPERIENCE_LINKS = [
+  { to: '/seans', label: 'Seans' },
+  { to: '/dna', label: 'Sinema DNA' },
+  { to: '/evren', label: 'Sinema Evreni' },
+  { to: '/birlikte', label: 'Birlikte İzle' },
+  { to: '/bilmece', label: 'Günlük Bilmece' },
+  { to: '/takip', label: 'Takip' },
 ];
 
 const FOCUS_RING =
@@ -139,6 +150,44 @@ function Navbar() {
                 </NavLink>
               </li>
             ))}
+            <li>
+              <Menu as="div" className="relative">
+                <MenuButton
+                  className={`inline-flex items-center gap-1 rounded-md px-3 py-2 text-sm font-medium text-secondary transition-colors duration-150 hover:text-primary ${FOCUS_RING}`}
+                >
+                  Deneyimler
+                  <ChevronDownIcon className="h-3.5 w-3.5" aria-hidden="true" />
+                </MenuButton>
+                <Transition
+                  as={Fragment}
+                  enter="transition ease-cine duration-150"
+                  enterFrom="transform opacity-0 scale-95"
+                  enterTo="transform opacity-100 scale-100"
+                  leave="transition ease-cine duration-150"
+                  leaveFrom="transform opacity-100 scale-100"
+                  leaveTo="transform opacity-0 scale-95"
+                >
+                  <MenuItems className="absolute left-0 mt-2 w-48 rounded-lg border border-line bg-surface-raised py-1 shadow-cine focus:outline-none">
+                    {EXPERIENCE_LINKS.map((link) => (
+                      <MenuItem key={link.to}>
+                        {({ focus }) => (
+                          <NavLink
+                            to={link.to}
+                            className={({ isActive }) =>
+                              `block px-3 py-2 text-sm ${
+                                isActive || focus ? 'bg-surface-overlay text-accent' : 'text-secondary'
+                              }`
+                            }
+                          >
+                            {link.label}
+                          </NavLink>
+                        )}
+                      </MenuItem>
+                    ))}
+                  </MenuItems>
+                </Transition>
+              </Menu>
+            </li>
           </ul>
         </nav>
 
@@ -271,6 +320,24 @@ function Navbar() {
                 >
                   Listelerim
                 </NavLink>
+
+                <p className="mt-6 px-3 pb-2 text-xs font-medium uppercase tracking-[0.08em] text-muted">
+                  Deneyimler
+                </p>
+                {EXPERIENCE_LINKS.map((link) => (
+                  <NavLink
+                    key={link.to}
+                    to={link.to}
+                    onClick={() => setDrawerOpen(false)}
+                    className={({ isActive }) =>
+                      `rounded-lg px-3 py-2.5 text-base ${
+                        isActive ? 'text-accent' : 'text-primary hover:bg-surface-overlay'
+                      } ${FOCUS_RING}`
+                    }
+                  >
+                    {link.label}
+                  </NavLink>
+                ))}
               </nav>
 
               <div className="border-t border-line px-4 py-4">

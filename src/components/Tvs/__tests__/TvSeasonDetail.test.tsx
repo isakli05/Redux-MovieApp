@@ -26,6 +26,17 @@ vi.mock('@components/MediaGallery/MediaGallery', () => ({
   default: () => <div data-testid="media-gallery" />,
 }))
 
+vi.mock('@/hooks/useAuth', () => ({
+  useAuth: () => ({
+    user: null,
+    isLoading: false,
+    isAuthenticated: false,
+    bootstrapped: true,
+    login: vi.fn(),
+    logout: vi.fn(),
+  }),
+}))
+
 import TvSeasonDetail from '@pages/Tvs/TvSeasonDetail'
 
 // --- Fixtures -----------------------------------------------------------------

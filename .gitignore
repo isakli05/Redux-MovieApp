@@ -39,3 +39,9 @@ SUMMARY.md
 
 # Local Netlify folder
 .netlify
+
+# Parallel feature worktrees (see docs/interactive-experiences/)
+wt/
+
+# Graphify query cache churn
+graphify-out/cache/

@@ -45,6 +45,13 @@ const TvSeasonsList = lazy(() => import('./Pages/Tvs/TvSeasonsList'));
 const Persons = lazy(() => import('./Pages/Persons/Persons'));
 const PersonDetails = lazy(() => import('./Pages/Persons/PersonDetails'));
 const Person404 = lazy(() => import('./Pages/Persons/Person404'));
+// Interactive experiences (docs/interactive-experiences/) — one chunk per feature.
+const Seans = lazy(() => import('./Pages/Experiences/Seans'));
+const SinemaDna = lazy(() => import('./Pages/Experiences/SinemaDna'));
+const SinemaEvreni = lazy(() => import('./Pages/Experiences/SinemaEvreni'));
+const BirlikteIzle = lazy(() => import('./Pages/Experiences/BirlikteIzle'));
+const GunlukBilmece = lazy(() => import('./Pages/Experiences/GunlukBilmece'));
+const Takip = lazy(() => import('./Pages/Experiences/Takip'));
 
 /** Branded route-chunk fallback: Fraunces wordmark + skeleton (never a blank page). */
 function RouteLoading() {
@@ -151,6 +158,14 @@ const router = createBrowserRouter(
         { path: 'lists', element: <Lists /> },
         { path: 'lists/:id', element: <ListsDetail /> },
         { path: 'kesfet', element: <Discover /> },
+        // Interactive experiences — routes pre-wired on the integration base so
+        // feature PMs never touch this file (SHARED_CONTRACTS §G).
+        { path: 'seans', element: <Seans /> },
+        { path: 'dna', element: <SinemaDna /> },
+        { path: 'evren', element: <SinemaEvreni /> },
+        { path: 'birlikte', element: <BirlikteIzle /> },
+        { path: 'bilmece', element: <GunlukBilmece /> },
+        { path: 'takip', element: <Takip /> },
         { path: 'auth/callback', element: <AuthCallback /> },
         {
           path: 'movie',
