@@ -21,8 +21,6 @@ import type {
   SeansContext,
 } from './types';
 
-const YEAR_MS = 365.25 * 24 * 60 * 60 * 1000;
-
 function yearOf(candidate: SeansCandidate): number | null {
   const date = candidate.releaseDate;
   if (!date || date.length < 4) return null;

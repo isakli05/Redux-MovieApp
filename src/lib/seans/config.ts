@@ -149,11 +149,20 @@ export function runtimeDef(id: RuntimeWindowId | null | undefined): RuntimeWindo
   return RUNTIME_WINDOWS.find((w) => w.id === id) ?? RUNTIME_WINDOWS[RUNTIME_WINDOWS.length - 1];
 }
 
-/** Bir süreden (dk) pencere türet — seed başlangıç seviyesinde kullanılır. */
-export function windowFromMinutes(minutes: number | null | undefined): RuntimeWindowId {
+/**
+ * Bir süreden (dk) pencere türet — seed başlangıç seviyesinde kullanılır.
+ * Film toplam süre, dizi bölüm süresi ölçeğindedir; eşikler türe göre ayrışır.
+ */
+export function windowFromMinutes(
+  minutes: number | null | undefined,
+  kind: SeansKind,
+): RuntimeWindowId {
   if (!minutes || minutes <= 0) return 'any';
-  if (minutes <= 30) return 'short';
-  if (minutes <= 45) return 'medium';
+  if (kind === 'tv') {
+    if (minutes <= 30) return 'short';
+    if (minutes <= 45) return 'medium';
+    return 'long';
+  }
   if (minutes <= 90) return 'short';
   if (minutes <= 120) return 'medium';
   return 'long';

@@ -128,6 +128,7 @@ export interface RawDiscoverItem {
 }
 
 export function normalizeCandidate(raw: RawDiscoverItem, kind: 'movie' | 'tv'): SeansCandidate | null {
+  if (!raw || typeof raw !== 'object') return null;
   if (typeof raw.id !== 'number' || raw.id <= 0) return null;
   const title = (raw.title ?? raw.name ?? '').trim();
   if (!title) return null;

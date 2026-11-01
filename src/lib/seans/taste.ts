@@ -13,7 +13,6 @@ import type { MediaRef } from '../mediaRef';
 import { mediaKey } from '../mediaRef';
 import { TASTE_TARGET_CAP } from './config';
 import type { GenreAffinity } from './types';
-import { fetchGenreIdsOf } from './api';
 
 /** Günlükteki en yeni N pozitif/negatif hedefi toplar (saf). */
 export function collectTasteTargets(events: Interaction[]): {
