@@ -79,14 +79,34 @@ export function affinityScoreFor(genreIds: number[], affinity: GenreAffinity): n
 type DnaWeightsModule = {
   default?: unknown;
   getGenreWeights?: () => unknown;
+  // Sinema DNA gerçek ihraç şekli (SHARED_CONTRACTS §H): 'movie:35' → ağırlık.
+  getTasteWeights?: (accountId?: number | null) => unknown;
 };
 
 /**
- * DNA profil dosyasını import.meta.glob ile bulur (derleme hatası riski yok;
- * dosya yoksa boş kalır). Bilinen iki ihraç şekli tolere edilir:
- * `default: { genreWeights }` veya `getGenreWeights(): Record<number, number>`.
+ * DNA ağırlık kaydını düz türe-id haritasına çevirir (saf). Hem yalın sayı
+ * anahtarlarını ("35") hem tür-önekli anahtarları ("movie:35", "tv:18")
+ * kabul eder; movie/tv tür id uzayları Seans'ta zaten düz tek uzaydır.
  */
-export async function loadDnaWeights(): Promise<Record<number, number>> {
+export function parseDnaWeightRecord(raw: unknown): Record<number, number> {
+  if (!raw || typeof raw !== 'object') return {};
+  const weights: Record<number, number> = {};
+  for (const [k, v] of Object.entries(raw as Record<string, unknown>)) {
+    const id = Number(k.includes(':') ? k.slice(k.indexOf(':') + 1) : k);
+    if (Number.isInteger(id) && id > 0 && typeof v === 'number' && Number.isFinite(v)) {
+      weights[id] = v;
+    }
+  }
+  return weights;
+}
+
+/**
+ * DNA profil dosyasını import.meta.glob ile bulur (derleme hatası riski yok;
+ * dosya yoksa boş kalır). Tanınan ihraç şekilleri:
+ * `getTasteWeights(accountId?)` (canonical, kind-önekli anahtarlar) ve
+ * legacy `default: { genreWeights }` / `getGenreWeights()`.
+ */
+export async function loadDnaWeights(accountId?: number | null): Promise<Record<number, number>> {
   const modules = import.meta.glob('../dna/profile.ts') as Record<
     string,
     () => Promise<DnaWeightsModule>
@@ -95,17 +115,14 @@ export async function loadDnaWeights(): Promise<Record<number, number>> {
   if (paths.length === 0) return {};
   try {
     const mod = await modules[paths[0]]();
+    if (typeof mod.getTasteWeights === 'function') {
+      return parseDnaWeightRecord(mod.getTasteWeights(accountId));
+    }
     const fromFactory = typeof mod.getGenreWeights === 'function' ? mod.getGenreWeights() : undefined;
     const raw =
       (typeof fromFactory === 'object' && fromFactory !== null ? fromFactory : undefined) ??
       (mod.default as { genreWeights?: unknown } | undefined)?.genreWeights;
-    if (!raw || typeof raw !== 'object') return {};
-    const weights: Record<number, number> = {};
-    for (const [k, v] of Object.entries(raw as Record<string, unknown>)) {
-      const id = Number(k);
-      if (Number.isInteger(id) && id > 0 && typeof v === 'number') weights[id] = v;
-    }
-    return weights;
+    return parseDnaWeightRecord(raw);
   } catch {
     return {};
   }

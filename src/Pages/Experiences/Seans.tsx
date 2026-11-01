@@ -258,7 +258,7 @@ export default function Seans() {
           }),
         );
         const affinity = deriveGenreAffinity(events, genreMap);
-        const dnaWeights = await loadDnaWeights();
+        const dnaWeights = await loadDnaWeights(accountId);
         if (Object.keys(dnaWeights).length > 0) {
           affinity.hasData = true;
           for (const [genreId, weight] of Object.entries(dnaWeights)) {
