@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import type { ReactNode } from 'react'
 import { BackdropHero, Button, PosterCard, Tabs } from '@components/ui'
+import UniverseLinkButton from '@components/Universe/UniverseLinkButton'
+import TvFollowButton from '@components/Tracker/TvFollowButton'
 import type { TabItem } from '@components/ui'
 import MediaGallery from '@components/MediaGallery/MediaGallery'
 import { getPosterUrl, posterSrcset } from '@utils/image.utils'
@@ -137,6 +139,18 @@ export function DetailDossier({ data }: { data: DetailDossierData }) {
                   <PlayIcon />
                   Fragman
                 </Button>
+              )}
+              <UniverseLinkButton
+                size="md"
+                media={{ kind: data.mediaType, id: data.id, title: data.title }}
+              />
+              {data.mediaType === 'tv' && (
+                <TvFollowButton
+                  size="md"
+                  tvId={data.id}
+                  title={data.title}
+                  posterPath={data.posterPath}
+                />
               )}
               {data.imdbId && (
                 <a

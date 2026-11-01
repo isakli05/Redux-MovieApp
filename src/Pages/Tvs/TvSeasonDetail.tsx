@@ -16,6 +16,7 @@ import EnhancedEpisodeCard from '@components/Tvs/EnhancedEpisodeCard'
 import SeasonTrailerModal from '@components/Tvs/SeasonTrailerModal'
 import MediaGallery from '@components/MediaGallery/MediaGallery'
 import { sortEpisodes } from '@utils/episodeSort'
+import TvProgressPanel from '@components/Tracker/TvProgressPanel'
 import type { SeasonVideo } from '@/types/seasonVideos'
 
 /** Sayfa iskeleti — spinner yerine düzeni koruyan shimmer blokları (fix P). */
@@ -171,6 +172,11 @@ function TvSeasonDetail() {
       {/* Sezon istatistikleri */}
       <div className="container mx-auto px-4 py-8">
         <EpisodeStatistics episodes={seasonDetail.episodes || []} />
+      </div>
+
+      {/* İzleme takip paneli (F6) — spoiler-safe bölüm işaretleme */}
+      <div className="container mx-auto px-4 pb-8">
+        <TvProgressPanel tvId={Number(tvId)} season={seasonDetail} />
       </div>
 
       {/* Bölüm sıralama çubuğu */}

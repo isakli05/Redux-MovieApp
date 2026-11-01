@@ -8,6 +8,7 @@ import { HiddenGemsRail } from '@components/Home/HiddenGemsRail'
 import { FreeRail } from '@components/Home/FreeRail'
 import { TrendingTvRail } from '@components/Home/TrendingTvRail'
 import { RecentsRail } from '@components/Home/RecentsRail'
+import { ExperiencesBand } from '@components/Home/ExperiencesBand'
 
 /** Spec §3 ritmi: py-16 md:py-20, max-w-[1440px] container, spec olukları. */
 const SECTION_CLASS = 'mx-auto w-full max-w-[1440px] px-4 py-16 sm:px-6 md:py-20 lg:px-8'
@@ -55,6 +56,8 @@ function Home() {
       <div className="bg-surface-base">
         <RecentsRail className={SECTION_CLASS} />
       </div>
+
+      <ExperiencesBand className={SECTION_CLASS} />
     </div>
   )
 }
