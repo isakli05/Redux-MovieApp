@@ -169,7 +169,10 @@ describe('DetailDossier', () => {
 
     // Kadro default: cast rail with person links + "Tümünü Gör" to cast page.
     expect(screen.getByText('Keanu Reeves').closest('a')).toHaveAttribute('href', '/person/1')
-    expect(screen.getByText('Tümünü Gör').closest('a')).toHaveAttribute('href', '/movie/603/cast')
+    // Başlık bağlantısı ve ray sonu kartı: ikisi de tam kadro sayfasına gider
+    const seeAll = screen.getAllByText('Tümünü Gör')
+    expect(seeAll.length).toBeGreaterThanOrEqual(2)
+    seeAll.forEach((el) => expect(el.closest('a')).toHaveAttribute('href', '/movie/603/cast'))
 
     // Medya: MediaGallery consumed read-only with the right args.
     await user.click(within(tablist).getByRole('tab', { name: 'Medya' }))

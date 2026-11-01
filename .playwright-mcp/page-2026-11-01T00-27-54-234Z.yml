@@ -1,0 +1,95 @@
+- generic [ref=f3e3]:
+  - link "İçeriğe atla" [ref=f3e4]:
+    - /url: "#main-content"
+  - banner [ref=f3e5]:
+    - generic [ref=f3e6]:
+      - link "LMDB — ana sayfa" [ref=f3e7]:
+        - /url: /
+        - text: LMDB.
+      - navigation "Ana gezinme" [ref=f3e8]:
+        - list [ref=f3e9]:
+          - listitem [ref=f3e10]:
+            - link "Keşfet" [ref=f3e11]:
+              - /url: /kesfet
+          - listitem [ref=f3e12]:
+            - link "Filmler" [ref=f3e13]:
+              - /url: /movie
+          - listitem [ref=f3e14]:
+            - link "Diziler" [ref=f3e15]:
+              - /url: /tv
+          - listitem [ref=f3e16]:
+            - link "İnsanlar" [ref=f3e17]:
+              - /url: /person
+          - listitem [ref=f3e18]:
+            - button "Deneyimler" [ref=f3e20]
+      - generic [ref=f3e23]:
+        - button "Ara (arama aç)" [ref=f3e24]:
+          - generic [ref=f3e27]: Ara…
+          - generic [ref=f3e28]: Ctrl K
+        - button "Giriş Yap" [ref=f3e29]
+  - main [ref=f3e30]:
+    - status [ref=f3e31]:
+      - paragraph [ref=f3e32]: LMDB.
+      - generic [ref=f3e37]: Sayfa yükleniyor…
+  - contentinfo [ref=f3e38]:
+    - generic [ref=f3e39]:
+      - generic [ref=f3e40]:
+        - generic [ref=f3e41]:
+          - paragraph [ref=f3e42]: LMDB.
+          - paragraph [ref=f3e43]: Film ve dizi keşif platformu. Puanları görün, kadroları inceleyin, kendi listelerinizi oluşturun.
+          - generic [ref=f3e44]:
+            - generic [ref=f3e45]:
+              - link "TMDB web sitesi (yeni sekmede açılır)" [ref=f3e46]:
+                - /url: https://www.themoviedb.org
+                - text: TMDB
+              - paragraph [ref=f3e47]: This product uses the TMDB API but is not endorsed or certified by TMDB.
+            - paragraph [ref=f3e48]: Yayın bilgileri JustWatch tarafından sağlanır.
+        - navigation "Keşif" [ref=f3e49]:
+          - heading "Keşif" [level=3] [ref=f3e50]
+          - list [ref=f3e51]:
+            - listitem [ref=f3e52]:
+              - link "Keşfet" [ref=f3e53]:
+                - /url: /kesfet
+            - listitem [ref=f3e54]:
+              - link "Arama" [ref=f3e55]:
+                - /url: /search
+            - listitem [ref=f3e56]:
+              - link "Ana Sayfa" [ref=f3e57]:
+                - /url: /
+        - navigation "Filmler" [ref=f3e58]:
+          - heading "Filmler" [level=3] [ref=f3e59]
+          - list [ref=f3e60]:
+            - listitem [ref=f3e61]:
+              - link "Popüler" [ref=f3e62]:
+                - /url: /movie
+            - listitem [ref=f3e63]:
+              - link "Vizyondakiler" [ref=f3e64]:
+                - /url: /movie/now-playing
+            - listitem [ref=f3e65]:
+              - link "Yakında" [ref=f3e66]:
+                - /url: /movie/upcoming
+        - navigation "Diziler" [ref=f3e67]:
+          - heading "Diziler" [level=3] [ref=f3e68]
+          - list [ref=f3e69]:
+            - listitem [ref=f3e70]:
+              - link "Popüler" [ref=f3e71]:
+                - /url: /tv
+            - listitem [ref=f3e72]:
+              - link "Günün Programı" [ref=f3e73]:
+                - /url: /tv/airing-today
+            - listitem [ref=f3e74]:
+              - link "Televizyonda" [ref=f3e75]:
+                - /url: /tv/on-the-air
+        - navigation "İnsanlar" [ref=f3e76]:
+          - heading "İnsanlar" [level=3] [ref=f3e77]
+          - list [ref=f3e78]:
+            - listitem [ref=f3e79]:
+              - link "Popüler Kişiler" [ref=f3e80]:
+                - /url: /person
+        - navigation "Listeler" [ref=f3e81]:
+          - heading "Listeler" [level=3] [ref=f3e82]
+          - list [ref=f3e83]:
+            - listitem [ref=f3e84]:
+              - link "Listelerim" [ref=f3e85]:
+                - /url: /lists
+      - paragraph [ref=f3e87]: © 2026 LMDB · Film ve Dizi Keşif

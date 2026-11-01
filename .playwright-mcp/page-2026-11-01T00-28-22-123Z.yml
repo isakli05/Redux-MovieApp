@@ -1,0 +1,184 @@
+- generic [ref=f3e3]:
+  - link "İçeriğe atla" [ref=f3e4]:
+    - /url: "#main-content"
+  - banner [ref=f3e5]:
+    - generic [ref=f3e6]:
+      - link "LMDB — ana sayfa" [ref=f3e7]:
+        - /url: /
+        - text: LMDB.
+      - navigation "Ana gezinme" [ref=f3e8]:
+        - list [ref=f3e9]:
+          - listitem [ref=f3e10]:
+            - link "Keşfet" [ref=f3e11]:
+              - /url: /kesfet
+          - listitem [ref=f3e12]:
+            - link "Filmler" [ref=f3e13]:
+              - /url: /movie
+          - listitem [ref=f3e14]:
+            - link "Diziler" [ref=f3e15]:
+              - /url: /tv
+          - listitem [ref=f3e16]:
+            - link "İnsanlar" [ref=f3e17]:
+              - /url: /person
+          - listitem [ref=f3e18]:
+            - button "Deneyimler" [ref=f3e20]
+      - generic [ref=f3e23]:
+        - button "Ara (arama aç)" [ref=f3e24]:
+          - generic [ref=f3e27]: Ara…
+          - generic [ref=f3e28]: Ctrl K
+        - button "Giriş Yap" [ref=f3e29]
+  - main [ref=f3e30]:
+    - generic [ref=f3e88]:
+      - generic [ref=f3e90]:
+        - paragraph [ref=f3e91]: LMDB Deneyimleri
+        - heading "Günlük Bilmece" [level=1] [ref=f3e92]
+      - paragraph [ref=f3e93]: Her gün tek bir film veya dizi bilmecesi — herkes için aynı. İlk ipucudan başla, altı hakkın var.
+      - paragraph [ref=f3e94]: 1 Kasım 2026 • Bilmeceler her gün 00:00 UTC’de yenilenir (Türkiye saatiyle 03:00).
+      - generic [ref=f3e95]:
+        - generic [ref=f3e96]:
+          - text: "Seri:"
+          - strong [ref=f3e97]: "0"
+          - text: gün
+        - generic [ref=f3e98]:
+          - text: Bugüne dek
+          - strong [ref=f3e99]: "0"
+          - text: bilmece
+      - generic [ref=f3e100]:
+        - heading "İpuçları" [level=2] [ref=f3e101]
+        - paragraph [ref=f3e102]: Her yanlış tahmin bir sonraki ipucunu açar.
+        - list "İpucu merdiveni" [ref=f3e104]:
+          - listitem [ref=f3e105]:
+            - paragraph [ref=f3e106]: 1. İpucu — Tür ve Dönem
+            - paragraph [ref=f3e107]: Film • 1950'ler • Aksiyon, Dram
+          - listitem [ref=f3e220]:
+            - paragraph [ref=f3e109]: 2. İpucu — Baş Harfler
+            - paragraph [ref=f3e110]: "Yönetmen: A. K. • Başrol: 三., 志., 稲."
+          - listitem "3. ipucu kilitli" [ref=f3e111]:
+            - paragraph [ref=f3e112]: 3. İpucu — Konu Kavramları
+            - paragraph [ref=f3e113]: 2. yanlış tahminde açılır 🔒
+          - listitem "4. ipucu kilitli" [ref=f3e114]:
+            - paragraph [ref=f3e115]: 4. İpucu — Başroller
+            - paragraph [ref=f3e116]: 3. yanlış tahminde açılır 🔒
+          - listitem "5. ipucu kilitli" [ref=f3e117]:
+            - paragraph [ref=f3e118]: 5. İpucu — Yıl ve Biçim
+            - paragraph [ref=f3e119]: 4. yanlış tahminde açılır 🔒
+        - generic [ref=f3e120]:
+          - generic [ref=f3e121]:
+            - generic [ref=f3e122]: Tahminin
+            - paragraph [ref=f3e123]:
+              - text: "Kalan hak:"
+              - generic [ref=f3e131]: "5"
+          - generic [ref=f3e132]:
+            - textbox "Tahminin" [ref=f3e133]:
+              - /placeholder: Örn. Uzay Yolcusu
+            - button "Dene" [disabled]
+          - paragraph [ref=f3e221]:
+            - generic [ref=f3e222]: "Yanlış tahminler:"
+            - text: "Denemeler: gladyatör"
+        - paragraph [ref=f3e134]: Yanlış. 5 hakkın kaldı — yeni ipucu açıldı.
+      - region [ref=f3e135]:
+        - heading "Kasım 2026 takvimi" [level=2] [ref=f3e136]
+        - paragraph [ref=f3e137]: Bu ay 0 gün oynadın, 0 bilmece çözüldü.
+        - 'img "Kasım 2026: 0 gün oynandı, 0 bilmece çözüldü." [ref=f3e138]':
+          - generic [aria-hidden] [ref=f3e139]: Pzt
+          - generic [aria-hidden] [ref=f3e140]: Sal
+          - generic [aria-hidden] [ref=f3e141]: Çar
+          - generic [aria-hidden] [ref=f3e142]: Per
+          - generic [aria-hidden] [ref=f3e143]: Cum
+          - generic [aria-hidden] [ref=f3e144]: Cmt
+          - generic [aria-hidden] [ref=f3e145]: Paz
+          - generic [aria-hidden] [ref=f3e153]: "1"
+          - generic [aria-hidden] [ref=f3e155]: "2"
+          - generic [aria-hidden] [ref=f3e157]: "3"
+          - generic [aria-hidden] [ref=f3e159]: "4"
+          - generic [aria-hidden] [ref=f3e161]: "5"
+          - generic [aria-hidden] [ref=f3e163]: "6"
+          - generic [aria-hidden] [ref=f3e165]: "7"
+          - generic [aria-hidden] [ref=f3e167]: "8"
+          - generic [aria-hidden] [ref=f3e169]: "9"
+          - generic [aria-hidden] [ref=f3e171]: "10"
+          - generic [aria-hidden] [ref=f3e173]: "11"
+          - generic [aria-hidden] [ref=f3e175]: "12"
+          - generic [aria-hidden] [ref=f3e177]: "13"
+          - generic [aria-hidden] [ref=f3e179]: "14"
+          - generic [aria-hidden] [ref=f3e181]: "15"
+          - generic [aria-hidden] [ref=f3e183]: "16"
+          - generic [aria-hidden] [ref=f3e185]: "17"
+          - generic [aria-hidden] [ref=f3e187]: "18"
+          - generic [aria-hidden] [ref=f3e189]: "19"
+          - generic [aria-hidden] [ref=f3e191]: "20"
+          - generic [aria-hidden] [ref=f3e193]: "21"
+          - generic [aria-hidden] [ref=f3e195]: "22"
+          - generic [aria-hidden] [ref=f3e197]: "23"
+          - generic [aria-hidden] [ref=f3e199]: "24"
+          - generic [aria-hidden] [ref=f3e201]: "25"
+          - generic [aria-hidden] [ref=f3e203]: "26"
+          - generic [aria-hidden] [ref=f3e205]: "27"
+          - generic [aria-hidden] [ref=f3e207]: "28"
+          - generic [aria-hidden] [ref=f3e209]: "29"
+          - generic [aria-hidden] [ref=f3e211]: "30"
+      - paragraph [ref=f3e218]:
+        - link "Cinema Universe’i keşfet" [ref=f3e219]:
+          - /url: /evren
+  - contentinfo [ref=f3e38]:
+    - generic [ref=f3e39]:
+      - generic [ref=f3e40]:
+        - generic [ref=f3e41]:
+          - paragraph [ref=f3e42]: LMDB.
+          - paragraph [ref=f3e43]: Film ve dizi keşif platformu. Puanları görün, kadroları inceleyin, kendi listelerinizi oluşturun.
+          - generic [ref=f3e44]:
+            - generic [ref=f3e45]:
+              - link "TMDB web sitesi (yeni sekmede açılır)" [ref=f3e46]:
+                - /url: https://www.themoviedb.org
+                - text: TMDB
+              - paragraph [ref=f3e47]: This product uses the TMDB API but is not endorsed or certified by TMDB.
+            - paragraph [ref=f3e48]: Yayın bilgileri JustWatch tarafından sağlanır.
+        - navigation "Keşif" [ref=f3e49]:
+          - heading "Keşif" [level=3] [ref=f3e50]
+          - list [ref=f3e51]:
+            - listitem [ref=f3e52]:
+              - link "Keşfet" [ref=f3e53]:
+                - /url: /kesfet
+            - listitem [ref=f3e54]:
+              - link "Arama" [ref=f3e55]:
+                - /url: /search
+            - listitem [ref=f3e56]:
+              - link "Ana Sayfa" [ref=f3e57]:
+                - /url: /
+        - navigation "Filmler" [ref=f3e58]:
+          - heading "Filmler" [level=3] [ref=f3e59]
+          - list [ref=f3e60]:
+            - listitem [ref=f3e61]:
+              - link "Popüler" [ref=f3e62]:
+                - /url: /movie
+            - listitem [ref=f3e63]:
+              - link "Vizyondakiler" [ref=f3e64]:
+                - /url: /movie/now-playing
+            - listitem [ref=f3e65]:
+              - link "Yakında" [ref=f3e66]:
+                - /url: /movie/upcoming
+        - navigation "Diziler" [ref=f3e67]:
+          - heading "Diziler" [level=3] [ref=f3e68]
+          - list [ref=f3e69]:
+            - listitem [ref=f3e70]:
+              - link "Popüler" [ref=f3e71]:
+                - /url: /tv
+            - listitem [ref=f3e72]:
+              - link "Günün Programı" [ref=f3e73]:
+                - /url: /tv/airing-today
+            - listitem [ref=f3e74]:
+              - link "Televizyonda" [ref=f3e75]:
+                - /url: /tv/on-the-air
+        - navigation "İnsanlar" [ref=f3e76]:
+          - heading "İnsanlar" [level=3] [ref=f3e77]
+          - list [ref=f3e78]:
+            - listitem [ref=f3e79]:
+              - link "Popüler Kişiler" [ref=f3e80]:
+                - /url: /person
+        - navigation "Listeler" [ref=f3e81]:
+          - heading "Listeler" [level=3] [ref=f3e82]
+          - list [ref=f3e83]:
+            - listitem [ref=f3e84]:
+              - link "Listelerim" [ref=f3e85]:
+                - /url: /lists
+      - paragraph [ref=f3e87]: © 2026 LMDB · Film ve Dizi Keşif
