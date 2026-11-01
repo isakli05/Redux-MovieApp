@@ -37,6 +37,9 @@ dist-ssr
 *_EXPLANATION.md
 SUMMARY.md
 
+# Docs are source-controlled (unignore the report patterns above for docs/)
+!docs/**
+
 # Local Netlify folder
 .netlify
 
