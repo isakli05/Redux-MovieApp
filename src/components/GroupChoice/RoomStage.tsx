@@ -114,7 +114,7 @@ export function RoomStage({ api, code, pid, hostKey, onRejoin, onExit }: RoomSta
   const attachDna = async () => {
     setDnaBusy(true);
     try {
-      const taste = await loadAnonymousTaste();
+      const taste = await loadAnonymousTaste(user?.id);
       if (taste && taste.genres.length > 0) {
         await act((a) => a.attachTaste(code, pid, taste.genres));
       }
