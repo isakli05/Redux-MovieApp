@@ -4,7 +4,7 @@ Baseline evidence (pre-branch, master @ 3affa46): typecheck ✅ · lint ✅ (0 e
 
 | Feature | PM agent | Branch | Worktree | State | Integrated | Blockers |
 |---|---|---|---|---|---|---|
-| F1 Seans | pm-seans | feature/lmdb-seans | wt/seans | not started | — | — |
+| F1 Seans | pm-seans | feature/lmdb-seans | wt/seans | in progress (f757df1 core ranker) | — | — |
 | F2 Cinema DNA | pm-cinema-dna | feature/lmdb-cinema-dna | wt/dna | not started | — | — |
 | F3 Cinema Universe | pm-cinema-universe | feature/lmdb-cinema-universe | wt/universe | not started | — | — |
 | F4 Group Choice | pm-group-choice | feature/lmdb-group-choice | wt/group | not started | — | — |
